@@ -1,2 +1,2 @@
 # Sparki
-Robitics CU Boulder
+Robotics CU Boulder
