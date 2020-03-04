@@ -13,11 +13,6 @@ from math import pi, cos, sin, floor, ceil
 ob_img=mpimg.imread('obstacles.png')
 
 # MAP TESTING
-'''
-og_x = -1
-og_y = -1
-og = True
-'''
 initial_start = True
 on_start = True
 display = False
@@ -91,6 +86,7 @@ def main():
             # close the loop, do relevant things
             if not initial_start:
                 if not on_start:
+                    rospy.loginfo("Loop Closure Triggered")
                     if servos:
                         new_servo_angle = servos.pop(0)
                         servo_msg = Int16(new_servo_angle)
@@ -122,13 +118,7 @@ def main():
 
         motor_msg = Float32MultiArray()
         motor_msg.data = [float(motor_left), float(motor_right)]
-        try:
-            publisher_motor.publish(motor_msg)
-        except:
-            print(motor_left)
-            print(motor_right)
-            print(motor_msg)
-            print(motor_msg.data)
+        publisher_motor.publish(motor_msg)
         
 
 
@@ -141,7 +131,6 @@ def main():
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
         
-
         #TODO: Implement loop closure here
         #if :
         #    rospy.loginfo("Loop Closure Triggered")
@@ -195,26 +184,9 @@ def callback_update_odometry(data):
         display_map()
         display = False
 
-
+    track_path(data.x, data.y)
+    
     pose2D_sparki_odometry = data
-    '''
-    if og_x == -1 and og_y == -1:
-        og_x = floor(100 * data.x)
-        og_y = floor(100 * data.y)
-        print(og_x)
-        print(og_y)
-        print('---')
-
-
-    if not og and abs(floor(100 * data.x) - og_x) < 3 and abs((floor(100 * data.y)) - og_y) < 3:
-        print(data.x)
-        print(data.y)
-
-        display_map()
-        og = True
-    elif not abs(floor(100 * data.x) - og_x) < 3 and abs((floor(100 * data.y)) - og_y) < 3:
-        og = False
-    '''
 
 def track_path(x, y):
     global world_map
