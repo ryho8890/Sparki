@@ -20,6 +20,8 @@ og = True
 '''
 initial_start = True
 on_start = True
+display = False
+task_complete = False
 
 # GLOBALS
 render_buffer = 0
@@ -65,7 +67,7 @@ def main():
     global IR_THRESHOLD, CYCLE_TIME, RENDER_LIMIT
     global pose2D_sparki_odometry, servo_angle, ir_readings, ping_distance
     global render_buffer
-    global servo_angle
+    global servo_angle, display, task_complete
 
     #TODO: Init your node to register it with the ROS core
     init()
@@ -95,11 +97,9 @@ def main():
                         publisher_servo.publish(servo_msg)
                         servo_angle = new_servo_angle
                         
-                    else:
-                        display_map()
-                        while True:
-                            pass
-
+                    elif not task_complete:
+                        display = True
+                        task_complete = True
 
                     on_start = True
         else:
@@ -188,7 +188,14 @@ def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2D_sparki_odometry
     global og_x, og_y, og
+    global display
     #TODO: Copy this data into your local odometry variable
+
+    if display:
+        display_map()
+        display = False
+
+
     pose2D_sparki_odometry = data
     '''
     if og_x == -1 and og_y == -1:
