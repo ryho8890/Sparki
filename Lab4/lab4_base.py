@@ -62,7 +62,7 @@ def main():
     global IR_THRESHOLD, CYCLE_TIME, RENDER_LIMIT
     global pose2D_sparki_odometry, servo_angle, ir_readings, ping_distance
     global render_buffer
-    global servo_angle, display, task_complete
+    global servo_angle, display, task_complete, initial_start
 
     #TODO: Init your node to register it with the ROS core
     init()
