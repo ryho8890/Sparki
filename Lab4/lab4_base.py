@@ -18,6 +18,7 @@ og_x = -1
 og_y = -1
 og = True
 '''
+initial_start = True
 on_start = True
 
 # GLOBALS
@@ -69,7 +70,7 @@ def main():
     #TODO: Init your node to register it with the ROS core
     init()
 
-    servos = [i in range(-90,105, 15)]
+    servos = list(range(0, 90, 15))
 
     while not rospy.is_shutdown():
         #TODO: Implement CYCLE TIME
@@ -80,24 +81,26 @@ def main():
         publisher_ping.publish(Empty())
         
         # MOTORS
-        motor_left = None
-        motor_right = None
+        motor_left = 1.0
+        motor_right = 1.0
 
         # LOOP CLOSURE
         if ir_readings['L'] < IR_THRESHOLD and ir_readings['C'] < IR_THRESHOLD and ir_readings['R'] < IR_THRESHOLD:
             # close the loop, do relevant things
-            if not on_start:
-                if servos:
-                    new_servo_angle = servos.pop(0)
-                    initial_servo_msg = Int16(new_servo_angle)
-                    publisher_servo.publish(initial_servo_msg)
-                    servo_angle = new_servo_angle
-                else:
+            if not initial_start:
+                if not on_start:
+                    if servos:
+                        new_servo_angle = servos.pop(0)
+                        servo_msg = Int16(new_servo_angle)
+                        publisher_servo.publish(servo_msg)
+                        servo_angle = new_servo_angle
+                
                     display_map()
 
-                on_start = True
+                    on_start = True
         else:
             on_start = False
+            initial_start = False
 
 
         # FOLLOW LINE
@@ -113,9 +116,14 @@ def main():
                 motor_right = -1.0
 
         motor_msg = Float32MultiArray()
-        motor_msg.data = [motor_left, motor_right]
-        
-        publisher_motor.publish(motor_msg)
+        motor_msg.data = [float(motor_left), float(motor_right)]
+        try:
+            publisher_motor.publish(motor_msg)
+        except:
+            print(motor_left)
+            print(motor_right)
+            print(motor_msg)
+            print(motor_msg.data)
         
 
 
