@@ -94,13 +94,18 @@ def main():
                         servo_msg = Int16(new_servo_angle)
                         publisher_servo.publish(servo_msg)
                         servo_angle = new_servo_angle
-                
-                    display_map()
+                        
+                    else:
+                        display_map()
+                        while True:
+                            pass
+
 
                     on_start = True
         else:
             on_start = False
             initial_start = False
+            pass
 
 
         # FOLLOW LINE
