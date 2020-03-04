@@ -2,9 +2,23 @@ import rospy
 import json
 import copy
 import time
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
+from math import pi, cos, sin, floor, ceil
 
+# Load obstables img
+ob_img=mpimg.imread('obstacles.png')
+
+# MAP TESTING
+'''
+og_x = -1
+og_y = -1
+og = True
+'''
+on_start = True
 
 # GLOBALS
 render_buffer = 0
@@ -19,7 +33,12 @@ ir_readings = {
         'R': -1
         }
 #TODO: Create data structure to hold map representation
+MAP_RES = 1 # cm
 
+MAP_WID = 200 / MAP_RES # redund for 1cm res, but can be altered to support other resolutions
+MAP_HEI = 200 / MAP_RES
+
+world_map = [[0 for i in range(ceil(MAP_HEI))] for j in range(ceil(MAP_WID))]
 
 
 # TODO: Use these variables to hold your publishers and subscribers
@@ -45,9 +64,12 @@ def main():
     global IR_THRESHOLD, CYCLE_TIME, RENDER_LIMIT
     global pose2D_sparki_odometry, servo_angle, ir_readings, ping_distance
     global render_buffer
+    global servo_angle
 
     #TODO: Init your node to register it with the ROS core
     init()
+
+    servos = [i in range(-90,105, 15)]
 
     while not rospy.is_shutdown():
         #TODO: Implement CYCLE TIME
@@ -57,10 +79,28 @@ def main():
         # push ping command 
         publisher_ping.publish(Empty())
         
-        # Line Following
+        # MOTORS
         motor_left = None
         motor_right = None
 
+        # LOOP CLOSURE
+        if ir_readings['L'] < IR_THRESHOLD and ir_readings['C'] < IR_THRESHOLD and ir_readings['R'] < IR_THRESHOLD:
+            # close the loop, do relevant things
+            if not on_start:
+                if servos:
+                    new_servo_angle = servos.pop(0)
+                    initial_servo_msg = Int16(new_servo_angle)
+                    publisher_servo.publish(initial_servo_msg)
+                    servo_angle = new_servo_angle
+                else:
+                    display_map()
+
+                on_start = True
+        else:
+            on_start = False
+
+
+        # FOLLOW LINE
         if ir_readings['C'] < IR_THRESHOLD:
             motor_left = 1.0
             motor_right = 1.0
@@ -90,8 +130,8 @@ def main():
         
 
         #TODO: Implement loop closure here
-        if False:
-            rospy.loginfo("Loop Closure Triggered")
+        #if :
+        #    rospy.loginfo("Loop Closure Triggered")
 
         #TODO: Implement CYCLE TIME
         render_buffer += CYCLE_TIME
@@ -126,17 +166,45 @@ def init():
     pose2D_sparki_odometry = Pose2D()
 
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
-    initial_servo_msg = Int16(45)
+    initial_servo_msg = Int16(70)
     publisher_servo.publish(initial_servo_msg)
-    servo_angle = 45
+    servo_angle = 70
 
 
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2D_sparki_odometry
+    global og_x, og_y, og
     #TODO: Copy this data into your local odometry variable
     pose2D_sparki_odometry = data
-    print(data.x)
+    '''
+    if og_x == -1 and og_y == -1:
+        og_x = floor(100 * data.x)
+        og_y = floor(100 * data.y)
+        print(og_x)
+        print(og_y)
+        print('---')
+
+
+    if not og and abs(floor(100 * data.x) - og_x) < 3 and abs((floor(100 * data.y)) - og_y) < 3:
+        print(data.x)
+        print(data.y)
+
+        display_map()
+        og = True
+    elif not abs(floor(100 * data.x) - og_x) < 3 and abs((floor(100 * data.y)) - og_y) < 3:
+        og = False
+    '''
+
+def track_path(x, y):
+    global world_map
+
+    x = floor(100 * x)
+    y = floor(100 * y)
+
+    for i in range(x-3,x+4):
+        for j in range(y-3, y+4):
+            world_map[i][j] = 2
 
 def callback_update_state(data):
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
@@ -150,40 +218,87 @@ def callback_update_state(data):
 
     try:
         ping_distance = float(state_dict['ping'])
+        if ping_distance >= 0:
+            x_r, y_r = convert_ultrasonic_to_robot_coords(ping_distance)
+            x_w, y_w = convert_robot_coords_to_world(x_r, y_r)
+            populate_map_from_ping(x_w, y_w)
+            
     except:
         pass
 
 def convert_ultrasonic_to_robot_coords(x_us):
     #TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
-    x_r, y_r = 0., 0.
+    #x_r, y_r = 0., 0.
+
+    x_r = 100 * x_us * cos((2 * pi * servo_angle) / 180.0 )
+    y_r = 100 * x_us * sin((2 * pi * servo_angle) / 180.0 )
+
     return x_r, y_r
 
 def convert_robot_coords_to_world(x_r, y_r):
     #TODO: Using odometry, convert robot-centric coordinates into world coordinates
-    x_w, y_w = 0., 0.
+    #x_w, y_w = 0., 0.
+    
+    t_w = pose2D_sparki_odometry.theta
+    x_w = pose2D_sparki_odometry.x * 100
+    y_w = pose2D_sparki_odometry.y * 100
+
+    x_w += (x_r * cos(t_w)) - (y_r * sin(t_w))
+    y_w += (x_r * sin(t_w)) + (y_r * cos(t_w)) 
 
     return x_w, y_w
 
 def populate_map_from_ping(x_ping, y_ping):
+    global world_map
     #TODO: Given world coordinates of an object detected via ping, fill in the corresponding part of the map
-    pass
+    i = floor(x_ping)
+    j = floor(y_ping)
+
+    if world_map[i][j] != 2:
+        world_map[i][j] = 1
 
 def display_map():
+    global world_map
     #TODO: Display the map
-    pass
+    hits = []
+    for i in range(ceil(MAP_WID)):
+        for j in range(ceil(MAP_HEI)):
+            if world_map[i][j] == 1:
+                x = i
+                y = j
+                xs = [x,x+1,x+1,x]
+                ys = [y,y,y+1,y+1]
+                hits.append({'x': xs, 'y':ys})
+
+    plt.figure()
+    #plt.imshow(ob_img)
+    plt.axis('equal')
+    for hit in hits:
+        plt.fill(hit['x'], hit['y'], "b")
+
+    plt.show()
+            
 
 def ij_to_cell_index(i,j):
     #TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
-    return 0
+    c = MAP_WID * j + i 
+    return c
 
 def cell_index_to_ij(cell_index):
     #TODO: Convert from cell_index to (i,j) coordinates
-    return 0, 0
+    j = cell_index / MAP_WID
+    i = cell_index % MAP_WID
+    return i, j
 
 
 def cost(cell_index_from, cell_index_to):
     #TODO: Return cost of traversing from one cell to another
-    return 0
+    i0, j0 = cell_index_to_if(cell_index_from)
+    i1, j1 = cell_index_to_if(cell_index_to)
+
+    cost = abs(i0 - i1) + abs(j0 - j1) # manhattan distance
+
+    return cost
 
 if __name__ == "__main__":
     main()
