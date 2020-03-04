@@ -194,8 +194,8 @@ def track_path(x, y):
     x = floor(100 * x)
     y = floor(100 * y)
 
-    for i in range(x-3,x+4):
-        for j in range(y-3, y+4):
+    for i in range(x-4,x+5):
+        for j in range(y-4, y+5):
             world_map[i][j] = 2
 
 def callback_update_state(data):
