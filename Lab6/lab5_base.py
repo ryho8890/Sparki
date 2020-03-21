@@ -2,6 +2,7 @@
  IMPORTANT: Read through the code before beginning implementation!
  Your solution should fill in the various "TODO" items within this starter code.
 '''
+import rospy
 import copy
 import math
 import random
@@ -10,6 +11,8 @@ from PIL import Image
 import numpy as np
 from pprint import pprint
 from math import floor, ceil
+from geometry_msgs.msg import Pose2D
+from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 import matplotlib.pyplot as plt
 
 g_CYCLE_TIME = .100
@@ -34,6 +37,25 @@ g_WORLD_MAP = [0] * g_NUM_Y_CELLS*g_NUM_X_CELLS # Initialize graph (grid) as arr
 g_dest_coordinates = (3,3)
 g_src_coordinates = (0,0)
 
+#GLOBALS
+render_buffer = 0
+pose2D_sparki_odometry = None
+ir_readings = {
+        'L': -1,
+        'C': -1,
+        'R': -1
+        }
+
+#Constants
+IR_THRESHOLD = 300
+CYCLE_TIME = 0.1 # In seconds
+RENDER_LIMIT = 1 # in seconds
+
+#Publishers
+publisher_motor = None # rospy.Publisher('/sparki/motor_command', Float32MultiArray)
+publisher_odom = None #rospy.Publisher('/sparki/set_odometry', Pose2D)
+publisher_render = None
+
 
 def create_test_map(map_array):
   # Takes an array representing a map of the world, copies it, and adds simulated obstacles
@@ -53,7 +75,6 @@ def create_test_map(map_array):
         raise Exception(random_cell)
 
   return new_map
-
 
 def _load_img_to_intensity_matrix(img_filename):
   '''
@@ -96,7 +117,6 @@ def ij_to_vertex_index(i,j):
   '''
   global g_NUM_X_CELLS
   return j*g_NUM_X_CELLS + i
-
 
 def ij_coordinates_to_xy_coordinates(i,j):
   '''
@@ -155,9 +175,6 @@ def get_travel_cost(vertex_source, vertex_dest):
       print(i1, j1)
       print(g_WORLD_MAP.shape)
       raise Exception('oof')
-
-
-
 
 def run_dijkstra(source_vertex):
   '''
@@ -245,7 +262,6 @@ def run_dijkstra(source_vertex):
   # Return results of algorithm run
   return nodeInfo
 
-
 def reconstruct_path(prev, source_vertex, dest_vertex):
   '''
   Given a populated 'prev' array, a source vertex_index, and destination vertex_index,
@@ -275,7 +291,6 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
       parent = nodeInfo[parent]['path']
 
   return final_path
-
 
 def render_map(map_array):
   '''
@@ -367,7 +382,6 @@ def part_1():
     Goal: (3,1)
     0 -> 1 -> 2 -> 6 -> 7
   '''
-
 
 def part_2(args):
   global g_dest_coordinates
@@ -483,10 +497,65 @@ def part_2(args):
 
   plt.show()
 
+def main():
+      global publisher_motor, publisher_odom, publisher_render
+      global IR_THRESHOLD, CYCLE_TIME, RENDER_LIMIT
+      global pose2D_sparki_odometry, ir_readings
+      global render_buffer
+      init()
+      # FOLLOW LINE
+      if ir_readings['C'] < IR_THRESHOLD:
+          motor_left = 1.0
+          motor_right = 1.0
+      else:
+          if ir_readings['L'] < IR_THRESHOLD:
+              motor_left = -1.0
+              motor_right = 1.0
+          if ir_readings['R'] < IR_THRESHOLD:
+              motor_left = 1.0
+              motor_right = -1.0
 
+      motor_msg = Float32MultiArray()
+      motor_msg.data = [float(motor_left), float(motor_right)]
+      try:
+          publisher_motor.publish(motor_msg)
+      except:
+          print(motor_left)
+          print(motor_right)
+          print(motor_msg)
+          print(motor_msg.data)
 
+      if render_buffer >= RENDER_LIMIT:
+          render_buffer = 0
+          publisher_render.publish(Empty())
+
+def init():
+    global publisher_motor, publisher_odom, publisher_render
+    global pose2D_sparki_odometry
+    global render_buffer
+
+    render_buffer = 0
+    ping_distance = 0
+
+    publisher_motor = rospy.Publisher('/sparki/motor_command', Float32MultiArray, queue_size=10)
+    publisher_odom = rospy.Publisher('/sparki/set_odometry', Pose2D, queue_size=10)
+    publisher_render = rospy.Publisher('/sparki/render_sim', Empty, queue_size=10)
+
+    # init the node
+    rospy.init_node('Lab6')
+
+    #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
+    pose2D_sparki_odometry = Pose2D()
+
+def callback_update_odometry(data):
+    # Receives geometry_msgs/Pose2D message
+    global pose2D_sparki_odometry
+    global og_x, og_y, og
+    #TODO: Copy this data into your local odometry variable
+    pose2D_sparki_odometry = data
 
 if __name__ == "__main__":
+  main()
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
   parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
   parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.3, 0.7], help='Goal x, y location in world coords')
