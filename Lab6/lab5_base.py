@@ -513,13 +513,15 @@ def getErrors(dest_x, dest_y):
 
     return errorsDict
 
-def main():
+def loop():
       global publisher_motor, publisher_odom, publisher_render
       global subscriber_odometry
       global CYCLE_TIME, RENDER_LIMIT
       global pose2D_sparki_odometry
       global render_buffer
       init()
+
+      raise Exception('triggered')
       # path
 
       #src_x = 0.5 # m
@@ -544,7 +546,7 @@ def main():
               except:
                   raise Exception(motor_left, motor_right)
 
-          elif abs(kinematicErrors['d']) >= 0.1: # m or cm???
+          elif abs(kinematicErrors['d']) >= 0.05: # m or cm???
               # distance error gets fixed
               motor_right = 1.0
               motor_left = 1.0
@@ -592,7 +594,7 @@ def callback_update_odometry(data):
     pose2D_sparki_odometry = copy.copy(data)
 
 if __name__ == "__main__":
-  main()
+  loop()
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
   parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
   parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.3, 0.7], help='Goal x, y location in world coords')
@@ -600,5 +602,5 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
 
-  part_1()
+  #part_1()
   #part_2(args)
