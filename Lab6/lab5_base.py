@@ -7,6 +7,7 @@ import copy
 import math
 import random
 import argparse
+import numpy as np
 from PIL import Image
 import numpy as np
 from pprint import pprint
@@ -492,6 +493,26 @@ def part_2(args):
 
   plt.show()
 
+def getErrors(dest_x, dest_y):
+    global pose2D_sparki_odometry
+
+    pose_theta = pose2D_sparki_odometry.theta
+
+    src_x = pose2D_sparki_odometry.x
+    src_y = pose2D_sparki_odometry.y
+
+    adj_x = float(dest_x - src_x)
+    adj_y = float(dest_y - src_y)
+
+    diff = float(adj_y / adj_x)
+
+    errorsDict = {
+        'b': np.arctan2(diff) - pose_theta,
+        'd': np.sqrt((src_x - dest_x)**2 + (src_y - dest_y)**2)
+    }
+
+    return errorsDict
+
 def main():
       global publisher_motor, publisher_odom, publisher_render
       global subscriber_odometry
@@ -500,30 +521,50 @@ def main():
       global render_buffer
       init()
       # path
-      if ir_readings['C'] < IR_THRESHOLD:
-          motor_left = 1.0
-          motor_right = 1.0
-      else:
-          if ir_readings['L'] < IR_THRESHOLD:
-              motor_left = -1.0
+
+      #src_x = 0.5 # m
+      #src_y = 0.5 # m
+
+      dest_x = 0.75 # m
+      dest_y = 0.75 # m
+
+      FIVE_DEG_RAD = 0.0873
+
+      while not rospy.is_shutdown():
+          # loop functionality
+          kinematicErrors = getErrors(dest_x,dest_y)
+          if abs(kinematicErrors['b']) >= FIVE_DEG_RAD:
+              motor_right = 1.0 if kinematicErrors['b'] > 0 else -1.0
+              motor_left = 1.0 if kinematicErrors['b'] < 0 else -1.0
+
+              motor_msg = Float32MultiArray()
+              motor_msg.data = [float(motor_left), float(motor_right)]
+              try:
+                  publisher_motor.publish(motor_msg)
+              except:
+                  raise Exception(motor_left, motor_right)
+
+          elif abs(kinematicErrors['d']) >= 0.1: # m or cm???
+              # distance error gets fixed
               motor_right = 1.0
-          if ir_readings['R'] < IR_THRESHOLD:
               motor_left = 1.0
-              motor_right = -1.0
 
-      motor_msg = Float32MultiArray()
-      motor_msg.data = [float(motor_left), float(motor_right)]
-      try:
-          publisher_motor.publish(motor_msg)
-      except:
-          print(motor_left)
-          print(motor_right)
-          print(motor_msg)
-          print(motor_msg.data)
+              motor_msg = Float32MultiArray()
+              motor_msg.data = [float(motor_left), float(motor_right)]
+              try:
+                  publisher_motor.publish(motor_msg)
+              except:
+                  raise Exception(motor_left, motor_right)
+          else:
+             # its arrived
+             raise Exception('Sparki has arrived')
 
-      if render_buffer >= RENDER_LIMIT:
-          render_buffer = 0
-          publisher_render.publish(Empty())
+          if render_buffer >= RENDER_LIMIT:
+              render_buffer = 0
+              publisher_render.publish(Empty())
+
+          render_buffer += CYCLE_TIME
+          rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
 
 def init():
     global publisher_motor, publisher_odom, publisher_render
