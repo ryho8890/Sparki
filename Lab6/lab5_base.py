@@ -40,14 +40,8 @@ g_src_coordinates = (0,0)
 #GLOBALS
 render_buffer = 0
 pose2D_sparki_odometry = None
-ir_readings = {
-        'L': -1,
-        'C': -1,
-        'R': -1
-        }
 
 #Constants
-IR_THRESHOLD = 300
 CYCLE_TIME = 0.1 # In seconds
 RENDER_LIMIT = 1 # in seconds
 
@@ -55,6 +49,7 @@ RENDER_LIMIT = 1 # in seconds
 publisher_motor = None # rospy.Publisher('/sparki/motor_command', Float32MultiArray)
 publisher_odom = None #rospy.Publisher('/sparki/set_odometry', Pose2D)
 publisher_render = None
+subscriber_state = None
 
 
 def create_test_map(map_array):
@@ -499,11 +494,12 @@ def part_2(args):
 
 def main():
       global publisher_motor, publisher_odom, publisher_render
-      global IR_THRESHOLD, CYCLE_TIME, RENDER_LIMIT
-      global pose2D_sparki_odometry, ir_readings
+      global subscriber_odometry
+      global CYCLE_TIME, RENDER_LIMIT
+      global pose2D_sparki_odometry
       global render_buffer
       init()
-      # FOLLOW LINE
+      # path
       if ir_readings['C'] < IR_THRESHOLD:
           motor_left = 1.0
           motor_right = 1.0
@@ -531,15 +527,16 @@ def main():
 
 def init():
     global publisher_motor, publisher_odom, publisher_render
+    global subscriber_odometry
     global pose2D_sparki_odometry
     global render_buffer
 
     render_buffer = 0
-    ping_distance = 0
 
     publisher_motor = rospy.Publisher('/sparki/motor_command', Float32MultiArray, queue_size=10)
     publisher_odom = rospy.Publisher('/sparki/set_odometry', Pose2D, queue_size=10)
     publisher_render = rospy.Publisher('/sparki/render_sim', Empty, queue_size=10)
+    subscriber_odometry = rospy.Subscriber('/sparki/odometry', Pose2D, callback=callback_update_odometry)
 
     # init the node
     rospy.init_node('Lab6')
@@ -550,9 +547,8 @@ def init():
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2D_sparki_odometry
-    global og_x, og_y, og
     #TODO: Copy this data into your local odometry variable
-    pose2D_sparki_odometry = data
+    pose2D_sparki_odometry = copy.copy(data)
 
 if __name__ == "__main__":
   main()
