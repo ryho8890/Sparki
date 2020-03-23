@@ -2,6 +2,7 @@
  IMPORTANT: Read through the code before beginning implementation!
  Your solution should fill in the various "TODO" items within this starter code.
 '''
+import time
 import rospy
 import copy
 import math
@@ -51,7 +52,6 @@ publisher_motor = None # rospy.Publisher('/sparki/motor_command', Float32MultiAr
 publisher_odom = None #rospy.Publisher('/sparki/set_odometry', Pose2D)
 publisher_render = None
 subscriber_state = None
-
 
 def create_test_map(map_array):
   # Takes an array representing a map of the world, copies it, and adds simulated obstacles
@@ -496,46 +496,43 @@ def part_2(args):
 def getErrors(dest_x, dest_y):
     global pose2D_sparki_odometry
 
-    pose_theta = pose2D_sparki_odometry.theta
+    pose_theta = float(pose2D_sparki_odometry.theta * np.pi/180)
 
     src_x = pose2D_sparki_odometry.x
     src_y = pose2D_sparki_odometry.y
 
+    print("x", src_x, "dest", dest_x)
+    print("y", src_y, "dest", dest_y)
+    # print("0", pose_theta)
+
     adj_x = float(dest_x - src_x)
     adj_y = float(dest_y - src_y)
 
-    diff = float(adj_y / adj_x)
+    #print(np.arctan2(adj_y, adj_x), "theta", pose_theta)
 
     errorsDict = {
-        'b': np.arctan2(diff) - pose_theta,
+        'b': np.arctan2(adj_y, adj_x) - pose_theta,
         'd': np.sqrt((src_x - dest_x)**2 + (src_y - dest_y)**2)
     }
 
     return errorsDict
 
-def loop():
+def main():
       global publisher_motor, publisher_odom, publisher_render
       global subscriber_odometry
       global CYCLE_TIME, RENDER_LIMIT
       global pose2D_sparki_odometry
       global render_buffer
       init()
-
-      raise Exception('triggered')
-      # path
-
-      #src_x = 0.5 # m
-      #src_y = 0.5 # m
-
-      dest_x = 0.75 # m
-      dest_y = 0.75 # m
-
-      FIVE_DEG_RAD = 0.0873
-
+      dest_x = g_dest_coordinates[0] # 0.9 # m
+      dest_y = g_dest_coordinates[1] #0.75 # m
       while not rospy.is_shutdown():
+          start_time = time.time()
           # loop functionality
           kinematicErrors = getErrors(dest_x,dest_y)
-          if abs(kinematicErrors['b']) >= FIVE_DEG_RAD:
+          #print(abs(kinematicErrors['b']))
+          if abs(kinematicErrors['b']) >= 5: #degrees
+              print("turn", kinematicErrors['b'])
               motor_right = 1.0 if kinematicErrors['b'] > 0 else -1.0
               motor_left = 1.0 if kinematicErrors['b'] < 0 else -1.0
 
@@ -546,8 +543,9 @@ def loop():
               except:
                   raise Exception(motor_left, motor_right)
 
-          elif abs(kinematicErrors['d']) >= 0.05: # m or cm???
+          elif abs(kinematicErrors['d']) >= 0.1: # m or cm???
               # distance error gets fixed
+              print("move", kinematicErrors['d'])
               motor_right = 1.0
               motor_left = 1.0
 
@@ -585,7 +583,8 @@ def init():
     rospy.init_node('Lab6')
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
-    pose2D_sparki_odometry = Pose2D()
+    #print(float(args.src_coordinates[0]), float(args.src_coordinates[1]))
+    pose2D_sparki_odometry = Pose2D(float(args.src_coordinates[0]), float(args.src_coordinates[1]), 0)
 
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
@@ -594,13 +593,13 @@ def callback_update_odometry(data):
     pose2D_sparki_odometry = copy.copy(data)
 
 if __name__ == "__main__":
-  loop()
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
-  parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
+  parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords') #1.2 0.2
   parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.3, 0.7], help='Goal x, y location in world coords')
   parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
   args = parser.parse_args()
 
+  main()
 
-  #part_1()
-  #part_2(args)
+  part_1()
+  part_2(args)
