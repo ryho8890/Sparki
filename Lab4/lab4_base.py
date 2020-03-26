@@ -1,4 +1,5 @@
 import rospy
+import time
 import json
 import copy
 import time
@@ -43,14 +44,14 @@ world_map = [[0 for i in range(ceil(MAP_HEI))] for j in range(ceil(MAP_WID))]
 publisher_motor = None # rospy.Publisher('/sparki/motor_command', Float32MultiArray)
 publisher_odom = None #rospy.Publisher('/sparki/set_odometry', Pose2D)
 publisher_ping = None #rospy.Publisher('/sparki/ping_command', Empty)
-publisher_servo = None #rospy.Publisher('/sparki/set_servo', Int16) 
+publisher_servo = None #rospy.Publisher('/sparki/set_servo', Int16)
 subscriber_odometry = None #rospy.Subscriber('/sparki/odometry', Pose2D, callback=callback_update_odometry)
-subscriber_state = None #rospy.Subscriber('/sparki/state', String, callback=callback_update_state) 
+subscriber_state = None #rospy.Subscriber('/sparki/state', String, callback=callback_update_state)
 
 # rendering publisher
 publisher_render = None
 
-# CONSTANTS 
+# CONSTANTS
 IR_THRESHOLD = 300 # IR sensor threshold for detecting black track. Change as necessary.
 CYCLE_TIME = 0.1 # In seconds
 RENDER_LIMIT = 1 # in seconds
@@ -73,10 +74,10 @@ def main():
         #TODO: Implement CYCLE TIME
         start_time = time.time()
 
-        
-        # push ping command 
+
+        # push ping command
         publisher_ping.publish(Empty())
-        
+
         # MOTORS
         motor_left = 1.0
         motor_right = 1.0
@@ -92,7 +93,7 @@ def main():
                         servo_msg = Int16(new_servo_angle)
                         publisher_servo.publish(servo_msg)
                         servo_angle = new_servo_angle
-                        
+
                     elif not task_complete:
                         display = True
                         task_complete = True
@@ -119,7 +120,7 @@ def main():
         motor_msg = Float32MultiArray()
         motor_msg.data = [float(motor_left), float(motor_right)]
         publisher_motor.publish(motor_msg)
-        
+
 
 
         if render_buffer >= RENDER_LIMIT:
@@ -130,7 +131,7 @@ def main():
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
-        
+
         #TODO: Implement loop closure here
         #if :
         #    rospy.loginfo("Loop Closure Triggered")
@@ -138,7 +139,7 @@ def main():
         #TODO: Implement CYCLE TIME
         render_buffer += CYCLE_TIME
         rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
-        
+
 
 
 def init():
@@ -185,7 +186,7 @@ def callback_update_odometry(data):
         display = False
 
     track_path(data.x, data.y)
-    
+
     pose2D_sparki_odometry = data
 
 def track_path(x, y):
@@ -214,7 +215,7 @@ def callback_update_state(data):
             x_r, y_r = convert_ultrasonic_to_robot_coords(ping_distance)
             x_w, y_w = convert_robot_coords_to_world(x_r, y_r)
             populate_map_from_ping(x_w, y_w)
-            
+
     except:
         pass
 
@@ -230,13 +231,13 @@ def convert_ultrasonic_to_robot_coords(x_us):
 def convert_robot_coords_to_world(x_r, y_r):
     #TODO: Using odometry, convert robot-centric coordinates into world coordinates
     #x_w, y_w = 0., 0.
-    
+
     t_w = pose2D_sparki_odometry.theta
     x_w = pose2D_sparki_odometry.x * 100
     y_w = pose2D_sparki_odometry.y * 100
 
     x_w += (x_r * cos(t_w)) - (y_r * sin(t_w))
-    y_w += (x_r * sin(t_w)) + (y_r * cos(t_w)) 
+    y_w += (x_r * sin(t_w)) + (y_r * cos(t_w))
 
     return x_w, y_w
 
@@ -269,11 +270,11 @@ def display_map():
         plt.fill(hit['x'], hit['y'], "b")
 
     plt.show()
-            
+
 
 def ij_to_cell_index(i,j):
     #TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
-    c = MAP_WID * j + i 
+    c = MAP_WID * j + i
     return c
 
 def cell_index_to_ij(cell_index):
@@ -294,5 +295,3 @@ def cost(cell_index_from, cell_index_to):
 
 if __name__ == "__main__":
     main()
-
-

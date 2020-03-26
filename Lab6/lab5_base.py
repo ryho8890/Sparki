@@ -3,6 +3,7 @@
  Your solution should fill in the various "TODO" items within this starter code.
 '''
 import rospy
+import time
 import copy
 import math
 import random
@@ -47,10 +48,10 @@ CYCLE_TIME = 0.1 # In seconds
 RENDER_LIMIT = 1 # in seconds
 
 #Publishers
-publisher_motor = None # rospy.Publisher('/sparki/motor_command', Float32MultiArray)
-publisher_odom = None #rospy.Publisher('/sparki/set_odometry', Pose2D)
+publisher_motor = None
+publisher_odom = None
 publisher_render = None
-subscriber_state = None
+subscriber_odometry = None
 
 
 def create_test_map(map_array):
@@ -501,13 +502,13 @@ def getErrors(dest_x, dest_y):
     src_x = pose2D_sparki_odometry.x
     src_y = pose2D_sparki_odometry.y
 
-    adj_x = float(dest_x - src_x)
+    adj_x = max(float(dest_x - src_x), 0.00000000000001)
     adj_y = float(dest_y - src_y)
 
     diff = float(adj_y / adj_x)
 
     errorsDict = {
-        'b': np.arctan2(diff) - pose_theta,
+        'b': np.arctan(diff) - pose_theta,
         'd': np.sqrt((src_x - dest_x)**2 + (src_y - dest_y)**2)
     }
 
@@ -519,25 +520,23 @@ def loop():
       global CYCLE_TIME, RENDER_LIMIT
       global pose2D_sparki_odometry
       global render_buffer
+
       init()
 
-      raise Exception('triggered')
-      # path
+      dest_x = 1.2 # m
+      dest_y = 1.1 # m
 
-      #src_x = 0.5 # m
-      #src_y = 0.5 # m
-
-      dest_x = 0.75 # m
-      dest_y = 0.75 # m
-
-      FIVE_DEG_RAD = 0.0873
+      FIVE_DEG_RAD = (1.0/5.0) * 0.0873
 
       while not rospy.is_shutdown():
+          start_time = time.time()
+
           # loop functionality
           kinematicErrors = getErrors(dest_x,dest_y)
           if abs(kinematicErrors['b']) >= FIVE_DEG_RAD:
-              motor_right = 1.0 if kinematicErrors['b'] > 0 else -1.0
-              motor_left = 1.0 if kinematicErrors['b'] < 0 else -1.0
+              print(kinematicErrors['b'])
+              motor_right = 0.5 if kinematicErrors['b'] < 0 else -0.5
+              motor_left = 0.5 if kinematicErrors['b'] > 0 else -0.5
 
               motor_msg = Float32MultiArray()
               motor_msg.data = [float(motor_left), float(motor_right)]
@@ -548,6 +547,7 @@ def loop():
 
           elif abs(kinematicErrors['d']) >= 0.05: # m or cm???
               # distance error gets fixed
+
               motor_right = 1.0
               motor_left = 1.0
 
