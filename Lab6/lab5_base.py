@@ -31,6 +31,7 @@ g_MAP_RESOLUTION_X = 0.2 #0.5 # Each col represents 50cm
 g_MAP_RESOLUTION_Y = 0.1 #0.375 # Each row represents 37.5cm
 g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
 g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y) # Number of rows in the grid map
+COORD_ADJ = 0.0015
 
 # Map from Lab 4: values of 0 indicate free space, 1 indicates occupied space
 g_WORLD_MAP = [0] * g_NUM_Y_CELLS*g_NUM_X_CELLS # Initialize graph (grid) as array
@@ -494,6 +495,67 @@ def part_2(args):
 
   plt.show()
 
+def loadWorld(args):
+    global g_dest_coordinates
+    global g_src_coordinates
+    global g_WORLD_MAP, g_MAP_RESOLUTION_X, g_MAP_RESOLUTION_Y, g_MAP_SIZE_X, g_MAP_SIZE_Y
+    global g_NUM_X_CELLS, g_NUM_Y_CELLS
+
+    fn = args.obstacles
+    g_src_coordinates = (float(args.src_coordinates[0]), float(args.src_coordinates[1]))
+    g_dest_coordinates = (float(args.dest_coordinates[0]), float(args.dest_coordinates[1]))
+
+    pixel_grid = _load_img_to_intensity_matrix(fn)
+
+    mean_i = np.mean(pixel_grid)
+
+    print(np.shape(pixel_grid))
+
+    MAP_X = int(1.2 * 1000)
+    RES_X = int(g_MAP_RESOLUTION_X*1000)
+
+    MAP_Y = int(0.8 * 1000)
+    RES_Y = int(g_MAP_RESOLUTION_Y*1000)
+
+    NUM_X = MAP_X // RES_X
+    NUM_Y = MAP_Y // RES_Y
+
+    g_NUM_X_CELLS = NUM_X
+    g_NUM_Y_CELLS = NUM_Y
+    g_MAP_RESOLUTION_X = RES_X
+    g_MAP_RESOLUTION_Y = RES_Y
+
+    g_WORLD_MAP = np.zeros((NUM_Y, NUM_X))
+
+    check = {}
+    obstacle = {}
+
+    for r in range(MAP_Y):
+        for c in range(MAP_X):
+            a = xy_coordinates_to_ij_coordinates(c,r)
+
+            if a not in check:
+                v = ij_to_vertex_index(a[0], a[1])
+                check[a] = True
+                obstacle[a] = False
+
+            if r < len(pixel_grid) and c < len(pixel_grid[0]):
+                if pixel_grid[r][c] > mean_i:
+                    obstacle[a] = True
+
+
+    for a in obstacle:
+        c,r = a
+        x,y = ij_coordinates_to_xy_coordinates(a[0], a[1])
+
+        if obstacle[a]:
+            v = 1
+        else:
+            v = 0
+
+        g_WORLD_MAP[r][c] = v
+
+
 def getErrors(dest_x, dest_y):
     global pose2D_sparki_odometry
 
@@ -502,64 +564,137 @@ def getErrors(dest_x, dest_y):
     src_x = pose2D_sparki_odometry.x
     src_y = pose2D_sparki_odometry.y
 
-    adj_x = max(float(dest_x - src_x), 0.00000000000001)
+    adj_x = float(dest_x - src_x)
     adj_y = float(dest_y - src_y)
 
-    diff = float(adj_y / adj_x)
+    #diff = float(adj_y / adj_x)
 
     errorsDict = {
-        'b': np.arctan(diff) - pose_theta,
+        'b': np.arctan2(adj_y, adj_x) - pose_theta,
         'd': np.sqrt((src_x - dest_x)**2 + (src_y - dest_y)**2)
     }
 
     return errorsDict
 
-def loop():
+def getDestCoords(d):
+    i,j = vertex_index_to_ij(d)
+    x,y = ij_coordinates_to_xy_coordinates(i,j)
+
+    x = x*COORD_ADJ
+    y = y*COORD_ADJ
+
+    return x,y
+
+def loop(args):
       global publisher_motor, publisher_odom, publisher_render
       global subscriber_odometry
       global CYCLE_TIME, RENDER_LIMIT
       global pose2D_sparki_odometry
       global render_buffer
+      global g_WORLD_MAP, g_src_coordinates, g_dest_coordinates, COORD_ADJ
 
-      init()
+      FACE = 0
+      APPROACH = 1
+      UPDATE_GOAL = 2
 
-      dest_x = 1.2 # m
-      dest_y = 1.1 # m
+      state = FACE
 
-      FIVE_DEG_RAD = (1.0/5.0) * 0.0873
+      init(args)
+
+      # Djikstra code
+      #########################################
+
+      src_x, src_y = g_src_coordinates[0]/COORD_ADJ, g_src_coordinates[1]/COORD_ADJ
+      dest_x, dest_y = g_dest_coordinates[0]/COORD_ADJ, g_dest_coordinates[1]/COORD_ADJ
+
+      print(src_x, src_y)
+
+      i,j = xy_coordinates_to_ij_coordinates(src_x, src_y)
+      src = ij_to_vertex_index(i,j)
+
+      i,j = xy_coordinates_to_ij_coordinates(dest_x, dest_y)
+      dest = ij_to_vertex_index(i,j)
+
+      nodeInfo = run_dijkstra(src)
+      path = reconstruct_path(nodeInfo, src, dest)
+
+      for p in path:
+          i,j = vertex_index_to_ij(p)
+          x,y = ij_coordinates_to_xy_coordinates(i,j)
+          plt.scatter([x], [800 - y], color='blue')
+
+      im = plt.imread('empty_world.png')
+      print(im.shape)
+      print('^')
+      im = plt.imread(args.obstacles)
+      plt.imshow(im)
+      plt.scatter([src_x], [800 - src_y], color='green')
+      plt.scatter([dest_x], [800 - dest_y], color = 'red')
+      plt.show()
+
+      ##########################################
+
+      #dest_x_m, dest_y_m = g_dest_coordinates
+      d = path.pop(0)
+      dest_x_m, dest_y_m = getDestCoords(d)
+
+      #print(dest_x_m, dest_y_m)
 
       while not rospy.is_shutdown():
           start_time = time.time()
 
           # loop functionality
-          kinematicErrors = getErrors(dest_x,dest_y)
-          if abs(kinematicErrors['b']) >= FIVE_DEG_RAD:
-              print(kinematicErrors['b'])
-              motor_right = 0.5 if kinematicErrors['b'] < 0 else -0.5
-              motor_left = 0.5 if kinematicErrors['b'] > 0 else -0.5
 
-              motor_msg = Float32MultiArray()
-              motor_msg.data = [float(motor_left), float(motor_right)]
-              try:
-                  publisher_motor.publish(motor_msg)
-              except:
-                  raise Exception(motor_left, motor_right)
+          kinematicErrors = getErrors(dest_x_m, dest_y_m)
 
-          elif abs(kinematicErrors['d']) >= 0.05: # m or cm???
-              # distance error gets fixed
+          if state == FACE:
+              if abs(kinematicErrors['b']) >= np.deg2rad(1):
 
-              motor_right = 1.0
-              motor_left = 1.0
+                  motor_right = 0.5 if kinematicErrors['b'] < 0 else -0.5
+                  motor_left = 0.5 if kinematicErrors['b'] > 0 else -0.5
 
-              motor_msg = Float32MultiArray()
-              motor_msg.data = [float(motor_left), float(motor_right)]
-              try:
-                  publisher_motor.publish(motor_msg)
-              except:
-                  raise Exception(motor_left, motor_right)
+                  motor_msg = Float32MultiArray()
+                  motor_msg.data = [float(motor_left), float(motor_right)]
+                  try:
+                      publisher_motor.publish(motor_msg)
+                  except:
+                      raise Exception(motor_left, motor_right)
+              else:
+                  state = APPROACH
+
+          elif state == APPROACH:
+              #while True:
+                  #pass
+              if abs(kinematicErrors['d']) >= 0.02: # m or cm???
+                  # distance error gets fixed
+                  #print(kinematicErrors['d'])
+
+                  motor_right = 0.5
+                  motor_left = 0.5
+
+                  motor_msg = Float32MultiArray()
+                  motor_msg.data = [float(motor_left), float(motor_right)]
+                  try:
+                      publisher_motor.publish(motor_msg)
+                  except:
+                      raise Exception(motor_left, motor_right)
+              else:
+                  state = UPDATE_GOAL
+
+          elif state == UPDATE_GOAL:
+              if path:
+                  print('Waypoint reached.')
+                  d = path.pop(0)
+                  dest_x_m, dest_y_m = getDestCoords(d)
+                  state = FACE
+              else:
+                  state = -1
           else:
              # its arrived
-             raise Exception('Sparki has arrived')
+             while True:
+                 pass
+
+             print('Sparki has arrived!')
 
           if render_buffer >= RENDER_LIMIT:
               render_buffer = 0
@@ -568,11 +703,14 @@ def loop():
           render_buffer += CYCLE_TIME
           rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
 
-def init():
+def init(args):
     global publisher_motor, publisher_odom, publisher_render
     global subscriber_odometry
     global pose2D_sparki_odometry
     global render_buffer
+    global g_src_coordinates, g_dest_coordinates
+
+    loadWorld(args)
 
     render_buffer = 0
 
@@ -586,6 +724,10 @@ def init():
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2D_sparki_odometry = Pose2D()
+    pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], g_src_coordinates[1], 0)
+
+    #pose2D_sparki_odometry = Pose2D(1.2 / COORD_ADJ, 0.8 / COORD_ADJ, 0)
+    publisher_odom.publish(pose2D_sparki_odometry)
 
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
@@ -594,13 +736,14 @@ def callback_update_odometry(data):
     pose2D_sparki_odometry = copy.copy(data)
 
 if __name__ == "__main__":
-  loop()
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
   parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
   parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.3, 0.7], help='Goal x, y location in world coords')
   parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
   args = parser.parse_args()
 
+  loop(args)
+raise Exception
 
   #part_1()
   #part_2(args)
