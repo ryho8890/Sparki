@@ -385,7 +385,7 @@ def part_2(args):
   global g_dest_coordinates
   global g_src_coordinates
   global g_WORLD_MAP, g_MAP_RESOLUTION_X, g_MAP_RESOLUTION_Y, g_MAP_SIZE_X, g_MAP_SIZE_Y
-  global g_NUM_X_CELLS, g_NUM_Y_CELLS
+  global g_NUM_X_CELLS, g_NUM_Y_CELLS, COORD_ADJ
 
   g_src_coordinates = (float(args.src_coordinates[0]), float(args.src_coordinates[1]))
   g_dest_coordinates = (float(args.dest_coordinates[0]), float(args.dest_coordinates[1]))
@@ -405,11 +405,11 @@ def part_2(args):
   #### Your code goes here ####
   mean_i = np.mean(pixel_grid)
 
-  MAP_X = int(1.8 * 1000)#int(MAP_SIZE_X)
-  RES_X = int(g_MAP_RESOLUTION_X*1000)
+  MAP_X = int(1.8 / COORD_ADJ)#int(MAP_SIZE_X)
+  RES_X = int(g_MAP_RESOLUTION_X/COORD_ADJ)
 
-  MAP_Y = int(1.2 * 1000)
-  RES_Y = int(g_MAP_RESOLUTION_Y*1000)
+  MAP_Y = int(1.2 / COORD_ADJ)
+  RES_Y = int(g_MAP_RESOLUTION_Y/COORD_ADJ)
 
   NUM_X = MAP_X // RES_X
   NUM_Y = MAP_Y // RES_Y
@@ -466,8 +466,8 @@ def part_2(args):
       g_WORLD_MAP[r][c] = v
 
 
-  src_x, src_y = g_src_coordinates[0]*1000, g_src_coordinates[1]*1000
-  dest_x, dest_y = g_dest_coordinates[0]*1000, g_dest_coordinates[1]*1000
+  src_x, src_y = g_src_coordinates[0]/COORD_ADJ, g_src_coordinates[1]/COORD_ADJ
+  dest_x, dest_y = g_dest_coordinates[0]/COORD_ADJ, g_dest_coordinates[1]/COORD_ADJ
 
   i,j = xy_coordinates_to_ij_coordinates(src_x, src_y)
   src = ij_to_vertex_index(i,j)
@@ -499,7 +499,7 @@ def loadWorld(args):
     global g_dest_coordinates
     global g_src_coordinates
     global g_WORLD_MAP, g_MAP_RESOLUTION_X, g_MAP_RESOLUTION_Y, g_MAP_SIZE_X, g_MAP_SIZE_Y
-    global g_NUM_X_CELLS, g_NUM_Y_CELLS
+    global g_NUM_X_CELLS, g_NUM_Y_CELLS, COORD_ADJ
 
     fn = args.obstacles
     g_src_coordinates = (float(args.src_coordinates[0]), float(args.src_coordinates[1]))
@@ -509,13 +509,11 @@ def loadWorld(args):
 
     mean_i = np.mean(pixel_grid)
 
-    print(np.shape(pixel_grid))
+    MAP_X = int(1.2 *1000)
+    RES_X = int(g_MAP_RESOLUTION_X *1000)
 
-    MAP_X = int(1.2 * 1000)
-    RES_X = int(g_MAP_RESOLUTION_X*1000)
-
-    MAP_Y = int(0.8 * 1000)
-    RES_Y = int(g_MAP_RESOLUTION_Y*1000)
+    MAP_Y = int(0.8 *1000)
+    RES_Y = int(g_MAP_RESOLUTION_Y *1000)
 
     NUM_X = MAP_X // RES_X
     NUM_Y = MAP_Y // RES_Y
@@ -535,7 +533,7 @@ def loadWorld(args):
             a = xy_coordinates_to_ij_coordinates(c,r)
 
             if a not in check:
-                v = ij_to_vertex_index(a[0], a[1])
+                #v = ij_to_vertex_index(a[0], a[1])
                 check[a] = True
                 obstacle[a] = False
 
@@ -577,11 +575,13 @@ def getErrors(dest_x, dest_y):
     return errorsDict
 
 def getDestCoords(d):
+    global COORD_ADJ
+
     i,j = vertex_index_to_ij(d)
     x,y = ij_coordinates_to_xy_coordinates(i,j)
 
     x = x*COORD_ADJ
-    y = y*COORD_ADJ
+    y = (800 * COORD_ADJ) - y*COORD_ADJ
 
     return x,y
 
@@ -604,33 +604,47 @@ def loop(args):
       # Djikstra code
       #########################################
 
-      src_x, src_y = g_src_coordinates[0]/COORD_ADJ, g_src_coordinates[1]/COORD_ADJ
-      dest_x, dest_y = g_dest_coordinates[0]/COORD_ADJ, g_dest_coordinates[1]/COORD_ADJ
+      src_x, src_y = g_src_coordinates[0], g_src_coordinates[1]
+      dest_x, dest_y = g_dest_coordinates[0], g_dest_coordinates[1]
 
-      print(src_x, src_y)
+      wack_src_x = src_x / COORD_ADJ
+      wack_src_y = src_y / COORD_ADJ
 
-      i,j = xy_coordinates_to_ij_coordinates(src_x, src_y)
+      wack_dest_x = dest_x / COORD_ADJ
+      wack_dest_y = dest_y / COORD_ADJ
+
+      i,j = xy_coordinates_to_ij_coordinates(wack_src_x, wack_src_y)
       src = ij_to_vertex_index(i,j)
 
-      i,j = xy_coordinates_to_ij_coordinates(dest_x, dest_y)
+      i,j = xy_coordinates_to_ij_coordinates(wack_dest_x, wack_dest_y)
       dest = ij_to_vertex_index(i,j)
 
       nodeInfo = run_dijkstra(src)
       path = reconstruct_path(nodeInfo, src, dest)
 
+      '''
       for p in path:
           i,j = vertex_index_to_ij(p)
           x,y = ij_coordinates_to_xy_coordinates(i,j)
-          plt.scatter([x], [800 - y], color='blue')
+          plt.scatter([x], [y], color='blue')
+
+      rows, cols = g_WORLD_MAP.shape
+      for i in range(rows):
+          for j in range(cols):
+              x,y = ij_coordinates_to_xy_coordinates(i,j)
+              if g_WORLD_MAP[i][j]:
+                  plt.scatter([x], [y], color='black')
+
+
 
       im = plt.imread('empty_world.png')
-      print(im.shape)
-      print('^')
+
       im = plt.imread(args.obstacles)
       plt.imshow(im)
-      plt.scatter([src_x], [800 - src_y], color='green')
-      plt.scatter([dest_x], [800 - dest_y], color = 'red')
+      plt.scatter([wack_src_x], [wack_src_y], color='green')
+      plt.scatter([wack_dest_x], [wack_dest_y], color = 'red')
       plt.show()
+      '''
 
       ##########################################
 
@@ -683,7 +697,13 @@ def loop(args):
 
           elif state == UPDATE_GOAL:
               if path:
+                  x = pose2D_sparki_odometry.x
+                  y = pose2D_sparki_odometry.y
+                  theta = pose2D_sparki_odometry.theta
                   print('Waypoint reached.')
+                  print('World Coordinates:')
+                  print('x: {0}\ny: {1}\ntheta: {2}'.format(x,y,theta))
+                  print('---------------------------------')
                   d = path.pop(0)
                   dest_x_m, dest_y_m = getDestCoords(d)
                   state = FACE
@@ -691,10 +711,9 @@ def loop(args):
                   state = -1
           else:
              # its arrived
+             print('Sparki has arrived!')
              while True:
                  pass
-
-             print('Sparki has arrived!')
 
           if render_buffer >= RENDER_LIMIT:
               render_buffer = 0
@@ -724,7 +743,7 @@ def init(args):
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2D_sparki_odometry = Pose2D()
-    pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], g_src_coordinates[1], 0)
+    pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], 800*COORD_ADJ - g_src_coordinates[1], 0)
 
     #pose2D_sparki_odometry = Pose2D(1.2 / COORD_ADJ, 0.8 / COORD_ADJ, 0)
     publisher_odom.publish(pose2D_sparki_odometry)
