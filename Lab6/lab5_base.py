@@ -27,7 +27,7 @@ MAP_Y_CELLS = None
 # Default parameters will create a 4x4 grid to test with
 g_MAP_SIZE_X = 2. # 2m wide
 g_MAP_SIZE_Y = 1.5 # 1.5m tall
-g_MAP_RESOLUTION_X = 0.2 #0.5 # Each col represents 50cm
+g_MAP_RESOLUTION_X = 0.1 #0.5 # Each col represents 50cm
 g_MAP_RESOLUTION_Y = 0.1 #0.375 # Each row represents 37.5cm
 g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
 g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y) # Number of rows in the grid map
@@ -507,6 +507,8 @@ def loadWorld(args):
 
     pixel_grid = _load_img_to_intensity_matrix(fn)
 
+    print(pixel_grid.shape)
+
     mean_i = np.mean(pixel_grid)
 
     MAP_X = int(1.2 *1000)
@@ -530,6 +532,7 @@ def loadWorld(args):
 
     for r in range(MAP_Y):
         for c in range(MAP_X):
+            # flip this
             a = xy_coordinates_to_ij_coordinates(c,r)
 
             if a not in check:
@@ -538,9 +541,10 @@ def loadWorld(args):
                 obstacle[a] = False
 
             if r < len(pixel_grid) and c < len(pixel_grid[0]):
-                if pixel_grid[r][c] > mean_i:
+                if pixel_grid[r][c] == 255.0: #> mean_i:
+                    if pixel_grid[r][c] != 255.0:
+                       print(pixel_grid[r][c])
                     obstacle[a] = True
-
 
     for a in obstacle:
         c,r = a
@@ -582,6 +586,7 @@ def getDestCoords(d):
 
     x = x*COORD_ADJ
     y = (800 * COORD_ADJ) - y*COORD_ADJ
+    #y = y*COORD_ADJ
 
     return x,y
 
@@ -608,10 +613,13 @@ def loop(args):
       dest_x, dest_y = g_dest_coordinates[0], g_dest_coordinates[1]
 
       wack_src_x = src_x / COORD_ADJ
-      wack_src_y = src_y / COORD_ADJ
+      wack_src_y = (800 * COORD_ADJ -src_y) / COORD_ADJ
 
-      wack_dest_x = dest_x / COORD_ADJ
-      wack_dest_y = dest_y / COORD_ADJ
+      wack_dest_x = dest_x  / COORD_ADJ
+      wack_dest_y = (800 * COORD_ADJ - dest_y) / COORD_ADJ
+
+      print(wack_src_x, wack_src_y)
+      print(wack_dest_x, wack_dest_y)
 
       i,j = xy_coordinates_to_ij_coordinates(wack_src_x, wack_src_y)
       src = ij_to_vertex_index(i,j)
@@ -622,7 +630,7 @@ def loop(args):
       nodeInfo = run_dijkstra(src)
       path = reconstruct_path(nodeInfo, src, dest)
 
-      '''
+
       for p in path:
           i,j = vertex_index_to_ij(p)
           x,y = ij_coordinates_to_xy_coordinates(i,j)
@@ -631,10 +639,9 @@ def loop(args):
       rows, cols = g_WORLD_MAP.shape
       for i in range(rows):
           for j in range(cols):
-              x,y = ij_coordinates_to_xy_coordinates(i,j)
+              x,y = ij_coordinates_to_xy_coordinates(j,i)
               if g_WORLD_MAP[i][j]:
-                  plt.scatter([x], [y], color='black')
-
+                  plt.scatter([x], [y], color='purple')
 
 
       im = plt.imread('empty_world.png')
@@ -644,7 +651,7 @@ def loop(args):
       plt.scatter([wack_src_x], [wack_src_y], color='green')
       plt.scatter([wack_dest_x], [wack_dest_y], color = 'red')
       plt.show()
-      '''
+
 
       ##########################################
 
@@ -653,6 +660,7 @@ def loop(args):
       dest_x_m, dest_y_m = getDestCoords(d)
 
       #print(dest_x_m, dest_y_m)
+      print('ok')
 
       while not rospy.is_shutdown():
           start_time = time.time()
@@ -744,6 +752,7 @@ def init(args):
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2D_sparki_odometry = Pose2D()
     pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], 800*COORD_ADJ - g_src_coordinates[1], 0)
+    #pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], g_src_coordinates[1], 0)
 
     #pose2D_sparki_odometry = Pose2D(1.2 / COORD_ADJ, 0.8 / COORD_ADJ, 0)
     publisher_odom.publish(pose2D_sparki_odometry)
@@ -762,7 +771,6 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   loop(args)
-raise Exception
 
   #part_1()
   #part_2(args)
