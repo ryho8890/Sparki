@@ -28,7 +28,7 @@ MAP_Y_CELLS = None
 g_MAP_SIZE_X = 2. # 2m wide
 g_MAP_SIZE_Y = 1.5 # 1.5m tall
 g_MAP_RESOLUTION_X = 0.1 #0.5 # Each col represents 50cm
-g_MAP_RESOLUTION_Y = 0.1 #0.375 # Each row represents 37.5cm
+g_MAP_RESOLUTION_Y = 0.075 #0.375 # Each row represents 37.5cm
 g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
 g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y) # Number of rows in the grid map
 COORD_ADJ = 0.0015
@@ -156,6 +156,22 @@ def get_travel_cost(vertex_source, vertex_dest):
 
   i0, j0 = vertex_index_to_ij(vertex_source)
   i1, j1 = vertex_index_to_ij(vertex_dest)
+
+  r,c = np.shape(g_WORLD_MAP)
+
+  lr = max(0, j0-1)
+  hr = min(r, j0+1)
+  lc = max(0, i0-1)
+  hc = min(c, i0+1)
+
+  # ADDITIONAL HEURISTIC TO INCENTIVIZE BEING FURTHER AWAY FROM OBSTACLES
+
+  window_cost = 10 * (g_WORLD_MAP[lr][i1] + g_WORLD_MAP[hr][i1])
+  window_cost += 5* (g_WORLD_MAP[j0][lc]  + g_WORLD_MAP[j0][hc])
+  #window_cost= 0
+
+
+
   try:
       if g_WORLD_MAP[j1][i1] == 1:
           return 10000#np.inf
@@ -166,7 +182,7 @@ def get_travel_cost(vertex_source, vertex_dest):
       elif i1 < 0 or i1 >= g_NUM_X_CELLS or j1 < 0 or j1 > g_NUM_Y_CELLS:
           return 10000#np.inf
       else:
-          return 1
+          return 1 + window_cost
   except:
       print(vertex_source, vertex_dest)
       print(i0, j0)
@@ -507,8 +523,6 @@ def loadWorld(args):
 
     pixel_grid = _load_img_to_intensity_matrix(fn)
 
-    print(pixel_grid.shape)
-
     mean_i = np.mean(pixel_grid)
 
     MAP_X = int(1.2 *1000)
@@ -525,7 +539,7 @@ def loadWorld(args):
     g_MAP_RESOLUTION_X = RES_X
     g_MAP_RESOLUTION_Y = RES_Y
 
-    g_WORLD_MAP = np.zeros((NUM_Y, NUM_X))
+    g_WORLD_MAP = np.zeros((NUM_Y+1, NUM_X+1))
 
     check = {}
     obstacle = {}
@@ -542,8 +556,6 @@ def loadWorld(args):
 
             if r < len(pixel_grid) and c < len(pixel_grid[0]):
                 if pixel_grid[r][c] == 255.0: #> mean_i:
-                    if pixel_grid[r][c] != 255.0:
-                       print(pixel_grid[r][c])
                     obstacle[a] = True
 
     for a in obstacle:
@@ -613,15 +625,12 @@ def loop(args):
       dest_x, dest_y = g_dest_coordinates[0], g_dest_coordinates[1]
 
       wack_src_x = src_x / COORD_ADJ
-      #wack_src_y = (800 * COORD_ADJ -src_y) / COORD_ADJ
-      wack_src_y = src_y / COORD_ADJ
+      wack_src_y = 800 - (src_y / COORD_ADJ)
+      #wack_src_y = src_y / COORD_ADJ
 
       wack_dest_x = dest_x  / COORD_ADJ
-      #wack_dest_y = (800 * COORD_ADJ - dest_y) / COORD_ADJ
-      wack_dest_y = dest_y / COORD_ADJ
-
-      print(wack_src_x, wack_src_y)
-      print(wack_dest_x, wack_dest_y)
+      wack_dest_y = 800 - (dest_y / COORD_ADJ)
+      #wack_dest_y = dest_y / COORD_ADJ
 
       i,j = xy_coordinates_to_ij_coordinates(wack_src_x, wack_src_y)
       src = ij_to_vertex_index(i,j)
@@ -638,6 +647,13 @@ def loop(args):
           x,y = ij_coordinates_to_xy_coordinates(i,j)
           plt.scatter([x], [y], color='blue')
 
+      im = plt.imread('empty_world.png')
+
+      im = plt.imread(args.obstacles)
+      plt.imshow(im)
+      plt.scatter([wack_src_x], [wack_src_y], color='green')
+      plt.scatter([wack_dest_x], [wack_dest_y], color = 'red')
+
       rows, cols = g_WORLD_MAP.shape
       for i in range(rows):
           for j in range(cols):
@@ -646,23 +662,19 @@ def loop(args):
                   plt.scatter([x], [y], color='purple')
 
 
-      im = plt.imread('empty_world.png')
-
-      im = plt.imread(args.obstacles)
-      plt.imshow(im)
-      plt.scatter([wack_src_x], [wack_src_y], color='green')
-      plt.scatter([wack_dest_x], [wack_dest_y], color = 'red')
       plt.show()
 
 
       ##########################################
 
       #dest_x_m, dest_y_m = g_dest_coordinates
-      d = path.pop(0)
-      dest_x_m, dest_y_m = getDestCoords(d)
+      try:
+          d = path.pop(0)
+          dest_x_m, dest_y_m = getDestCoords(d)
+      except:
+          print('No path available... :/')
 
       #print(dest_x_m, dest_y_m)
-      print('ok')
 
       while not rospy.is_shutdown():
           start_time = time.time()
@@ -753,7 +765,7 @@ def init(args):
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2D_sparki_odometry = Pose2D()
-    pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], 800*COORD_ADJ - g_src_coordinates[1], 0)
+    pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], g_src_coordinates[1], 0)
     #pose2D_sparki_odometry = Pose2D(g_src_coordinates[0], g_src_coordinates[1], 0)
 
     #pose2D_sparki_odometry = Pose2D(1.2 / COORD_ADJ, 0.8 / COORD_ADJ, 0)
