@@ -613,10 +613,12 @@ def loop(args):
       dest_x, dest_y = g_dest_coordinates[0], g_dest_coordinates[1]
 
       wack_src_x = src_x / COORD_ADJ
-      wack_src_y = (800 * COORD_ADJ -src_y) / COORD_ADJ
+      #wack_src_y = (800 * COORD_ADJ -src_y) / COORD_ADJ
+      wack_src_y = src_y / COORD_ADJ
 
       wack_dest_x = dest_x  / COORD_ADJ
-      wack_dest_y = (800 * COORD_ADJ - dest_y) / COORD_ADJ
+      #wack_dest_y = (800 * COORD_ADJ - dest_y) / COORD_ADJ
+      wack_dest_y = dest_y / COORD_ADJ
 
       print(wack_src_x, wack_src_y)
       print(wack_dest_x, wack_dest_y)
