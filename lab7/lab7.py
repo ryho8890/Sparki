@@ -16,21 +16,12 @@ def loop(args):
     goal_theta = float(args.theta_goal[0])
     
     print('Message sent.')
-    print('Enter CTRL-C to exit.')
-    try:
-        while not rospy.is_shutdown():
-            start_time = time.time()
+    start_time = time.time()
         
-            if (goal_x and goal_y and goal_theta):
-                status = goToGoal(goal_x, goal_y, goal_theta)
+    if (goal_x and goal_y and goal_theta):
+        status = goToGoal(goal_x, goal_y, goal_theta)
 
-            rospy.sleep(max(g_CYCLE_TIME - (start_time - time.time()), 0))
-    except KeyboardInterrupt:
-        if status:
-            print('omplete')
-        else:
-            print('Error Occured')
-
+    return status
     
 def init():
     global pub_goal
@@ -42,7 +33,6 @@ def goToGoal(x,y,t):
     global pub_goal
 
     msg = PoseStamped()
-    msg.header.stamp = rospy.Time.now()
         
     msg.header.frame_id = 'map'
     msg.pose.position.x = x
@@ -53,6 +43,8 @@ def goToGoal(x,y,t):
 
     msg.pose.orientation = Quaternion(*q)
 
+    rospy.sleep(1)
+    msg.header.stamp = rospy.Time.now()
     pub_goal.publish(msg)
 
     return 1
@@ -73,4 +65,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    loop(args)
+    if not loop(args):
+        raise Exception("FUBAR")
+    else:
+        print("Message received.")
