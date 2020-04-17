@@ -1,7 +1,7 @@
 <sdf version='1.6'>
   <world name='default'>
     <light name='sun' type='directional'>
-      <cast_shadows>1</cast_shadows>
+      <cast_shadows>0</cast_shadows>
       <pose frame=''>0 0 10 0 -0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
@@ -91,7 +91,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>8 8 0.1</size>
+              <size>5 8 0.1</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -112,7 +112,7 @@
           <cast_shadows>0</cast_shadows>
           <geometry>
             <box>
-              <size>8 8 0.1</size>
+              <size>5 8 0.1</size>
             </box>
           </geometry>
           <material>
@@ -135,7 +135,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -143,7 +143,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -173,7 +173,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -181,7 +181,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -211,7 +211,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -219,7 +219,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -249,7 +249,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -257,7 +257,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -287,7 +287,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -295,7 +295,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -325,7 +325,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -333,7 +333,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -363,7 +363,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -371,7 +371,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -401,7 +401,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -409,7 +409,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -439,7 +439,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -447,7 +447,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -477,7 +477,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -485,7 +485,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -515,7 +515,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -523,7 +523,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -553,7 +553,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -561,7 +561,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -591,7 +591,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -599,7 +599,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -629,7 +629,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -637,7 +637,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -667,7 +667,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -675,7 +675,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -705,7 +705,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 1</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -713,7 +713,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <scale>0.4 0.4 0.4</scale>
+              <scale>0.4 0.4 2</scale>
               <uri>model://drc_practice_yellow_parking_block/meshes/block.dae</uri>
             </mesh>
           </geometry>
@@ -1118,65 +1118,65 @@
       <pose frame=''>-4.11846 1.90298 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>985 204000000</sim_time>
-      <real_time>255 726600927</real_time>
-      <wall_time>1587158859 932659391</wall_time>
-      <iterations>247892</iterations>
+      <sim_time>1379 875000000</sim_time>
+      <real_time>408 611479678</real_time>
+      <wall_time>1587164209 170319039</wall_time>
+      <iterations>394671</iterations>
       <model name='15 min'>
-        <pose frame=''>3.78799 -3.33948 0 0 -0 1.49964</pose>
+        <pose frame=''>0.777852 -3.36645 0 0 -0 1.55696</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.78799 -3.33948 0 0 -0 1.49964</pose>
+          <pose frame=''>0.777852 -3.36645 0 0 -0 1.55696</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='15 min_0'>
-        <pose frame=''>3.81104 -2.51098 0 0 -0 1.50137</pose>
+        <pose frame=''>0.765944 -2.50462 0 0 -0 1.56871</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.81104 -2.51098 0 0 -0 1.50137</pose>
+          <pose frame=''>0.765944 -2.50462 0 0 -0 1.56871</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='30 min'>
-        <pose frame=''>3.79742 -1.62665 0 0 -0 1.62623</pose>
+        <pose frame=''>0.778178 -1.62902 -0 0 -0 1.57158</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.79742 -1.62665 0 0 -0 1.62623</pose>
+          <pose frame=''>0.778178 -1.62902 -0 0 -0 1.57158</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='30 min_0'>
-        <pose frame=''>3.80181 -0.757089 0 0 -0 1.65206</pose>
+        <pose frame=''>0.769836 -0.812525 0 0 -0 1.58908</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.80181 -0.757089 0 0 -0 1.65206</pose>
+          <pose frame=''>0.769836 -0.812525 0 0 -0 1.58908</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='60 min'>
-        <pose frame=''>3.81895 0.074924 0 0 -0 1.62142</pose>
+        <pose frame=''>0.757918 0.064075 0 0 -0 1.57434</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.81895 0.074924 0 0 -0 1.62142</pose>
+          <pose frame=''>0.757918 0.064075 0 0 -0 1.57434</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='60 min_0'>
-        <pose frame=''>3.81543 0.926364 0 0 -0 1.56001</pose>
+        <pose frame=''>0.761446 0.959307 0 0 -0 1.56001</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.81543 0.926364 0 0 -0 1.56001</pose>
+          <pose frame=''>0.761446 0.959307 0 0 -0 1.56001</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -1223,20 +1223,20 @@
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block'>
-        <pose frame=''>3.706 -3.36878 0 0 -0 0</pose>
+        <pose frame=''>0.724677 -3.36878 -0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.706 -3.36878 0 0 -0 0</pose>
+          <pose frame=''>0.724677 -3.36878 -0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block_clone'>
-        <pose frame=''>3.71699 -2.53693 0 0 -0 0</pose>
+        <pose frame=''>0.715458 -2.53693 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.71699 -2.53693 0 0 -0 0</pose>
+          <pose frame=''>0.715458 -2.53693 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -1323,90 +1323,60 @@
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block_clone_clone'>
-        <pose frame=''>3.71785 -1.66901 0 0 -0 0</pose>
+        <pose frame=''>0.714505 -1.66901 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.71785 -1.66901 0 0 -0 0</pose>
+          <pose frame=''>0.714505 -1.66901 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block_clone_clone_clone'>
-        <pose frame=''>3.71984 -0.806029 0 0 -0 0</pose>
+        <pose frame=''>0.710521 -0.806029 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.71984 -0.806029 0 0 -0 0</pose>
+          <pose frame=''>0.710521 -0.806029 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block_clone_clone_clone_clone'>
-        <pose frame=''>3.72554 0.043787 0 0 -0 0</pose>
+        <pose frame=''>0.702671 0.043787 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.72554 0.043787 0 0 -0 0</pose>
+          <pose frame=''>0.702671 0.043787 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block_clone_clone_clone_clone_clone'>
-        <pose frame=''>3.73246 0.891431 0 0 -0 0</pose>
+        <pose frame=''>0.703819 0.891431 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.73246 0.891431 0 0 -0 0</pose>
+          <pose frame=''>0.703819 0.891431 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block_clone_clone_clone_clone_clone_clone'>
-        <pose frame=''>3.73848 1.74901 0 0 -0 0</pose>
+        <pose frame=''>0.70629 1.74901 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.73848 1.74901 0 0 -0 0</pose>
+          <pose frame=''>0.70629 1.74901 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='drc_practice_yellow_parking_block_clone_clone_clone_clone_clone_clone_clone'>
-        <pose frame=''>3.74008 2.61112 0 0 -0 0</pose>
+        <pose frame=''>0.701168 2.61112 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.74008 2.61112 0 0 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='grey_wall'>
-        <pose frame=''>-0.151868 -3.80665 -1.15991 0 -0 0</pose>
-        <scale>1 1 1</scale>
-        <link name='link'>
-          <pose frame=''>-0.151868 -3.80665 0.240094 0 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='grey_wall_clone'>
-        <pose frame=''>-4.35137 0.249867 -1.15991 0 0 -1.56838</pose>
-        <scale>1 1 1</scale>
-        <link name='link'>
-          <pose frame=''>-4.35137 0.249867 0.24009 0 0 -1.56838</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='grey_wall_clone_clone'>
-        <pose frame=''>4.02189 0.126072 -1.15991 0 0 -1.57245</pose>
-        <scale>1 1 1</scale>
-        <link name='link'>
-          <pose frame=''>4.02189 0.126072 0.24009 0 0 -1.57245</pose>
+          <pose frame=''>0.701168 2.61112 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -1423,10 +1393,10 @@
         </link>
       </model>
       <model name='parking lot'>
-        <pose frame=''>-0.155162 0.171601 0 0 -0 0</pose>
+        <pose frame=''>-1.7084 0.171601 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-0.155162 0.171601 0 0 -0 0</pose>
+          <pose frame=''>-1.7084 0.171601 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -1438,145 +1408,10 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>-1.75982 0.522731 8.16966 0 1.5418 3.12496</pose>
+        <pose frame=''>2.05897 0.736106 25.8451 0 1.5418 3.12496</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
-    <model name='grey_wall'>
-      <static>1</static>
-      <link name='link'>
-        <pose frame=''>0 0 1.4 0 -0 0</pose>
-        <collision name='collision'>
-          <geometry>
-            <box>
-              <size>7.5 0.2 0.5</size>
-            </box>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <cast_shadows>0</cast_shadows>
-          <geometry>
-            <box>
-              <size>7.5 0.2 0.5</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>model://grey_wall/materials/scripts</uri>
-              <uri>model://grey_wall/materials/textures</uri>
-              <name>vrc/grey_wall</name>
-            </script>
-          </material>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose frame=''>0.073115 -5.23395 0 0 -0 0</pose>
-    </model>
-    <model name='grey_wall_clone'>
-      <static>1</static>
-      <link name='link'>
-        <pose frame=''>0 0 1.4 0 -0 0</pose>
-        <collision name='collision'>
-          <geometry>
-            <box>
-              <size>7.5 0.2 0.5</size>
-            </box>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <cast_shadows>0</cast_shadows>
-          <geometry>
-            <box>
-              <size>7.5 0.2 0.5</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>model://grey_wall/materials/scripts</uri>
-              <uri>model://grey_wall/materials/textures</uri>
-              <name>vrc/grey_wall</name>
-            </script>
-          </material>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose frame=''>-8.2184 -0.092009 -1.15991 0 -0 0</pose>
-    </model>
-    <model name='grey_wall_clone_clone'>
-      <static>1</static>
-      <link name='link'>
-        <pose frame=''>0 0 1.4 0 -0 0</pose>
-        <collision name='collision'>
-          <geometry>
-            <box>
-              <size>7.5 0.2 0.5</size>
-            </box>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <cast_shadows>0</cast_shadows>
-          <geometry>
-            <box>
-              <size>7.5 0.2 0.5</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>model://grey_wall/materials/scripts</uri>
-              <uri>model://grey_wall/materials/textures</uri>
-              <name>vrc/grey_wall</name>
-            </script>
-          </material>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose frame=''>4.02189 0.126072 -1.15991 0 0 -1.56838</pose>
-    </model>
   </world>
 </sdf>
