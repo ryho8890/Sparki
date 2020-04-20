@@ -1,6 +1,24 @@
+import numpy as np
+import rospy
+import cv2
+import time
+
+# CONSTANTS
+CYCLE_TIME = 0.1
+
+# GLOBALS
+waypoints = None
+subscriber_waypoints = None
+subscriber_image = None
+publisher_sign_detection = None
+
+
 '''
 Init function to start our detectSign node and instantiate publishers and subscribers
 '''
+def init():
+    
+    pass
 
 '''
 Ryan!
@@ -48,3 +66,10 @@ while ros isnt shutdown
     else:
         pass (do nothing)
 '''
+def loop():
+    global x #all the globals
+
+    init()
+
+    while not rospy.is_shutdown():
+        start_time = time.time()
