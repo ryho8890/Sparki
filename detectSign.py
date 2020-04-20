@@ -2,70 +2,88 @@ import numpy as np
 import rospy
 import cv2
 import time
+from sensor_msgs.msg import Image
+from std_msgs.msg import Float32MultiArray
+from nav_msgs.msg import Odometry
+from cv_bridge import CvBridge
 
 # CONSTANTS
-CYCLE_TIME = 0.1
+CYCLE_TIME = 2 # a bit slower to allow turtlebot to actually move and not overwhelm system
 
 # GLOBALS
 waypoints = None
 subscriber_waypoints = None
 subscriber_image = None
+subscriber_pose = None
 publisher_sign_detection = None
+pose_x = None
+pose_y = None
 
 
 '''
 Init function to start our detectSign node and instantiate publishers and subscribers
 '''
 def init():
-    
-    pass
+    global waypoints, subscriber_waypoints, subscriber_image, publisher_sign_detection
 
-'''
-Ryan!
-/odom
+    subscriber_image = rospy.Subscriber('/camera/rgb/image_raw', Image, imageCallback)
+    subscriber_waypoints = rospy.Subscriber('/parkingBot/waypoints', Float32MultiArray, waypointCallback)
+    subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallback)
 
-nearWaypoint
-input(pose, waypoints)
 
-pseudo-code:
-for wp in wps:
-    if within couple cm's:
-        return true
-    else
-        continue
-'''
+def imageCallback(data):
+    wp = nearWaypoint()
+    if not wp is None:
+        Bridge = CvBridge()
+        try:
+            cv_img = bridge.imgmsg_to_cv2(data, "bgr8")
+            analyzePicture(cv_img, wp)
+        except:
+            pass
+    return
 
-'''
-Nick!
+def waypointCallback(data):
+    waypoints = list(data.copy())
 
-takePicture
-input: None
-returns: np array of whatever ros gives us
+def poseCallback(data):
+    global pose_x, pose_y
 
-pseudo-code:
- TBD
-'''
+    pose_x = data.pose.pose.position.x
+    pose_y = data.pose.pose.position.y
+
+def nearWaypoint():
+    global pose_x, pose_y, waypoints
+
+    if pose_x is None or pose_y is None:
+        return None
+
+    if waypoints is None:
+        return None
+
+    THRESHOLD = 5 # TO BE DETERMINED
+
+    for i in range(len(waypoints)):
+        wp_y, wp_x = waypoints[i]
+        if np.sqrt((wp_y - pose_y)^2 + (wp_x - pose_x)^2) <= THRESHOLD:
+            waypoints = waypoints.pop(i)
+            return (wp_y, wp_x)
+
+    return None
+
 
 '''
 analyzePicture
 input: np array from takePicture
 outPut: what type of sign it is
 '''
+def analyzePicture(img, wp):
+    cv2.imshow(img)
+    cv2.waitKey(0)
+    print(wp)
 
-'''
-Nick!
+    return
 
-loop
 
-main ros loop
-while ros isnt shutdown
-    get pose
-    check if near any waypoint
-    if yes:
-        call take pic
-    else:
-        pass (do nothing)
-'''
 def loop():
     global x #all the globals
 
@@ -73,3 +91,7 @@ def loop():
 
     while not rospy.is_shutdown():
         start_time = time.time()
+        rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
+
+if __name__ == "__main__":
+    loop()
