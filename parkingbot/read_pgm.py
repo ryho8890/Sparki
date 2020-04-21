@@ -19,6 +19,12 @@ def read_pgm(filename, byteorder='>'):
                             offset=len(header)
                             ).reshape((int(height), int(width)))
 
+def foundInWaypoints(waypoints, point):
+    for i in waypoints:
+        if i = point:
+            return true
+    return false
+
 def waypoints(map):
     nodes = []
     waypoints=[]
@@ -29,14 +35,20 @@ def waypoints(map):
     for i in nodes:
         x = i[0]
         y = i[1]
-        if (map[y][x+1] == 0 and map[y+1][x] == 0 and x > 135 and x < 140) or (x > 192 and x < 197 and map[y][x-1] == 0 and map[y+1][x] == 0):
-            y = y + 8
-            if x < 140:
-                x = x + 7
-            if x > 192:
-                x = x - 7
-            if map[y][x] != -1:
-                waypoints.append([x, y])
+        #left side spots
+        if map[y][130] == 1: #if a line detected
+            count = y
+            while map[count][130] == 0: #count spaces until next line detected
+                count = count + 1
+            if count - y != 0 and !foundInWaypoints(waypoints, [130, y + count/2]):
+                waypoints.append([130, y + count/2]) #add the midpoint between the two lines
+        #same thing on right side
+        if map[y][185] == 1:
+            count = y
+            while map[count][185] == 0:
+                count = count + 1
+            if count - y != 0 and !foundInWaypoints(waypoints, [185, y + count/2]):
+                waypoints.append([185, y + count/2])
     return waypoints
 
 if __name__ == "__main__":
