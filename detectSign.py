@@ -30,6 +30,8 @@ def init():
     subscriber_waypoints = rospy.Subscriber('/parkingBot/waypoints', Float32MultiArray, waypointCallback)
     subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallback)
 
+    rospy.init_node('signCV')
+
 
 def imageCallback(data):
     wp = nearWaypoint()
@@ -85,7 +87,7 @@ def analyzePicture(img, wp):
 
 
 def loop():
-    global x #all the globals
+    global subscriber_pose, subscriber_image, subscriber_waypoints #all the globals
 
     init()
 
