@@ -1,6 +1,7 @@
 import re
 import numpy
 import math
+from matplotlib import pyplot
 
 def read_pgm(filename, byteorder='>'):
     with open(filename, 'rb') as f:
@@ -19,6 +20,12 @@ def read_pgm(filename, byteorder='>'):
                             offset=len(header)
                             ).reshape((int(height), int(width)))
 
+def foundInWaypoints(waypoints, point):
+    for i in waypoints:
+        if i == point:
+            return 1
+    return 0
+
 def waypoints(map):
     nodes = []
     waypoints=[]
@@ -29,18 +36,27 @@ def waypoints(map):
     for i in nodes:
         x = i[0]
         y = i[1]
-        if (map[y][x+1] == 0 and map[y+1][x] == 0 and x > 135 and x < 140) or (x > 192 and x < 197 and map[y][x-1] == 0 and map[y+1][x] == 0):
-            y = y + 8
-            if x < 140:
-                x = x + 7
-            if x > 192:
-                x = x - 7
-            if map[y][x] != -1:
-                waypoints.append([x, y])
+        #left side spots
+        if map[y][130] == 1: #if a line detected
+            count = 0
+            row = y+1
+            while map[row][130] == 0: #count spaces until next line detected
+                count = count + 1
+                row = row + 1
+            if count != 0 and foundInWaypoints(waypoints, [142, y + count/2]) == 0:
+                waypoints.append([142, y + count/2]) #add the midpoint between the two lines
+        #same thing on right side
+        if map[y][200] == 1:
+            count = 0
+            row = y+1
+            while map[row][200] == 0:
+                count = count + 1
+                row = row + 1
+            if count != 0 and foundInWaypoints(waypoints, [188, y + count/2]) == 0:
+                waypoints.append([188, y + count/2])
     return waypoints
 
 if __name__ == "__main__":
-    from matplotlib import pyplot
     image = read_pgm("map.pgm", byteorder='<')
 
     #This is the matrix with the hex values
