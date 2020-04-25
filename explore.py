@@ -9,7 +9,7 @@ from nav_msgs.msg import Odometry
 # CONSTANTS
 CYCLE_TIME = 0.1
 TURN_LEFT = 0
-GO STRAIGHT = 1
+GO_STRAIGHT = 1
 TURN_RIGHT = 2
 STOP = 3
 
@@ -27,7 +27,7 @@ def poseCallback(data):
 
     pose_x = data.pose.pose.position.x
     pose_y = data.pose.pose.position.y
-    y,p,r = getRPY(pose.pose.orientation)
+    y,p,r = getRPY(data.pose.pose.orientation)
     pose_w = y
 
 '''
@@ -66,8 +66,8 @@ def init():
 
     state = -1
 
-    publisher_complete = rospy.publisher('/explore/complete', Bool, queue_size=5)
-    publisher_vel = rospy.publisher('/cmd_vel', Twist, queue_size=5)
+    publisher_complete = rospy.Publisher('/explore/complete', Bool, queue_size=5)
+    publisher_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
     subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallback)
     subscriber_laser = None
 
@@ -75,7 +75,7 @@ def init():
 
 def loop():
     global subscriber_pose, publisher_complete, publisher_vel
-    global pose_x, pose_y, pose_w
+    global pose_x, pose_y, pose_w, state
 
     init()
 
@@ -94,30 +94,48 @@ def loop():
             if w0 is None:
                 w0 = pose_w
 
-            ###### ADJUST TO HANDLE TOLERANCE ######
-            if abs(abs(pose_w - w0) - math.pi / 2.0) <= 0.05:
-                # publish message to continue to turn left
-                pass
+            sign0 = int(max(np.sign(w0), 0))
+            sign1 = int(max(np.sign(pose_w), 0))
 
+            # check if different signed valuesv
+            if sign0 and not sign1:
+                pose_w += 2 * math.pi
+
+
+            ###### ADJUST TO HANDLE TOLERANCE ######
+            if abs(pose_w - w0) < (math.pi / 2.0):
+                # publish message to continue to turn left
+                twist_msg.angular.z = 0.1
+                publisher_vel.publish(twist_msg)
             else:
                 # publish message to stop
+                twist_msg.angular.z = 0
+                publisher_vel.publish(twist_msg)
                 state = GO_STRAIGHT
                 w0 = None
 
         elif state == TURN_RIGHT:
             if w0 is None:
                 w0 = pose_w
-                turns_taken += 1
 
-            ###### ADJUST TO HANDLE TOLERANCE ######
-            if abs(abs(pose_w - w0) - math.pi / 2.0) <= 0.05:
+            sign0 = int(max(np.sign(w0), 0))
+            sign1 = int(max(np.sign(pose_w), 0))
+
+            # check if different signed values
+            if sign1 and not sign0:
+                pose_w -= 2 * math.pi
+
+            if abs(pose_w - w0) < (math.pi / 2.0):
                 # publish message to continue to turn left
-                pass
-
+                twist_msg.angular.z = -0.1
+                publisher_vel.publish(twist_msg)
             else:
                 # publish message to stop
+                twist_msg.angular.z = 0
+                publisher_vel.publish(twist_msg)
                 state = GO_STRAIGHT
                 w0 = None
+                turns_taken += 1
 
         elif state == GO_STRAIGHT:
             if x0 is None or y0 is None:
@@ -125,33 +143,75 @@ def loop():
                 y0 = pose_y
 
             if turns_taken == 0:
-                state = TURN_RIGHT
                 # go half distance
-                
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 0.75:
+                    twist_msg.linear.x = 0.2
+                    publisher_vel.publish(twist_msg)
+                    #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))
+                else:
+                    state = TURN_RIGHT
+                    twist_msg.linear.x = 0
+                    publisher_vel.publish(twist_msg)
+                    x0 = None
+                    y0 = None
 
-                pass
             elif turns_taken == 1:
-                state = TURN_RIGHT
                 # go full distance
-                pass
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 6:
+                    twist_msg.linear.x = 0.2
+                    publisher_vel.publish(twist_msg)
+                    #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))
+                else:
+                    state = TURN_RIGHT
+                    twist_msg.linear.x = 0
+                    publisher_vel.publish(twist_msg)
+                    x0 = None
+                    y0 = None
+
             elif turns_taken == 2:
-                state = TURN_RIGHT
-                # go full distance
-                pass
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 1.5:
+                    twist_msg.linear.x = 0.2
+                    publisher_vel.publish(twist_msg)
+                    #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))
+                else:
+                    state = TURN_RIGHT
+                    twist_msg.linear.x = 0
+                    publisher_vel.publish(twist_msg)
+                    x0 = None
+                    y0 = None
             elif turns_taken == 3:
-                state = TURN_RIGHT
                 # go full distance
-                pass
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 6:
+                    twist_msg.linear.x = 0.2
+                    publisher_vel.publish(twist_msg)
+                    #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))
+                else:
+                    state = TURN_RIGHT
+                    twist_msg.linear.x = 0
+                    publisher_vel.publish(twist_msg)
+                    x0 = None
+                    y0 = None
             elif turns_taken == 4:
-                state = STOP
-                #go half distance then stop
-                pass
+                # go half distance
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 0.75:
+                    twist_msg.linear.x = 0.2
+                    publisher_vel.publish(twist_msg)
+                    #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))
+                else:
+                    state = TURN_RIGHT
+                    twist_msg.linear.x = 0
+                    publisher_vel.publish(twist_msg)
+                    x0 = None
+                    y0 = None
             else:
-                state = TURN_RIGHT
-                # go full distance
+                state = STOP
         elif state == STOP:
             #publish exploration complete
-            pass
+            twist_msg.linear.x = 0
+            publisher_vel.publish(twist_msg)
+            complete_msg = Bool(True)
+            publisher_complete.publish(complete_msg)
+            return
 
 
         start_time = time.time()
@@ -159,3 +219,7 @@ def loop():
 
 
         rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
+
+
+if __name__ == "__main__":
+    loop()
