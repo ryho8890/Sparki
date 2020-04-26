@@ -3,6 +3,7 @@ import numpy
 import math
 from matplotlib import pyplot
 
+'''
 def read_pgm(filename, byteorder='>'):
     with open(filename, 'rb') as f:
         buffer = f.read()
@@ -19,6 +20,7 @@ def read_pgm(filename, byteorder='>'):
                             count=int(width)*int(height),
                             offset=len(header)
                             ).reshape((int(height), int(width)))
+'''
 
 def foundInWaypoints(waypoints, point):
     for i in waypoints:

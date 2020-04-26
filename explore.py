@@ -86,6 +86,8 @@ def loop():
     y0 = None
 
     while not rospy.is_shutdown():
+        start_time = time.time()
+
         twist_msg = Twist()
 
         if state == -1:
@@ -212,11 +214,6 @@ def loop():
             complete_msg = Bool(True)
             publisher_complete.publish(complete_msg)
             return
-
-
-        start_time = time.time()
-
-
 
         rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
 
