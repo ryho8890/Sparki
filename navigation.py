@@ -9,15 +9,36 @@ from move_base_msgs.msg import *
 CYCLE_TIME = 0.100
 
 publisher_navigate = None
+publisher_at_waypoint = None
+subscriber_cv_complete = None
 subscriber_waypoints = None
+subscriber_status = None
 
-waypoints = []
+waypoints = None
+
+def init():
+    global publisher_navigate, subscriber_waypoints
+
+    rospy.init_node('navigation')
+    publisher_navigate = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
+    subscriber_waypoints = rospy.Subscriber('/parkingbot/waypoints', Int32MultiArray, waypointCallBack)
 
 def waypointCallBack(data):
-    waypoints = data
+    # reshape and put in correct resolution
+    waypoints = np.array(data).reshape((-1, 2)) * (5 / 100.0)
 
 def loop():
+
     init()
+
+    while not rospy.is_shutdown():
+        start_time = time.time()
+        if waypoints is None:
+            continue
+
+        rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
+
+
     print(waypoints)
     goal_x = float(waypoints[0][0])
     goal_y = float(waypoints[0][1])
@@ -30,13 +51,6 @@ def loop():
         status = goToGoal(goal_x, goal_y, goal_theta)
 
     return status
-
-def init():
-    global publisher_navigate, subscriber_waypoints
-
-    rospy.init_node('navigation')
-    publisher_navigate = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
-    subscriber_waypoints = rospy.Subscriber('/parkingbot/waypoints', Float32MultiArray, waypointCallBack)
 
 def goToGoal(x,y,t):
     global publisher_navigate, subscriber_waypoints

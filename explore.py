@@ -105,7 +105,8 @@ def loop():
 
 
             ###### ADJUST TO HANDLE TOLERANCE ######
-            if abs(pose_w - w0) < (math.pi / 2.0):
+            #if abs(pose_w - w0) < (math.pi / 2.0):
+            if abs(pose_w) >= 0.01: # 2 degrees in radians
                 # publish message to continue to turn left
                 twist_msg.angular.z = 0.1
                 publisher_vel.publish(twist_msg)
@@ -127,8 +128,21 @@ def loop():
             if sign1 and not sign0:
                 pose_w -= 2 * math.pi
 
-            if abs(pose_w - w0) < (math.pi / 2.0):
-                # publish message to continue to turn left
+            if turns_taken == 0:
+                dest_angle = -1 * math.pi / 2.0
+            elif turns_taken == 1:
+                dest_angle = -1 * math.pi
+            elif turns_taken == 2:
+                dest_angle = math.pi / 2.0
+            elif turns_taken == 3:
+                dest_angle = 0
+            elif turns_taken == 4:
+                dest_angle = -1 * math.pi / 2.0
+
+            print(dest_angle, pose_w)
+
+            if abs(pose_w - dest_angle) >= 0.01: # 0.5 degrees in radians
+                # publish message to continue to turn right
                 twist_msg.angular.z = -0.1
                 publisher_vel.publish(twist_msg)
             else:
@@ -146,7 +160,7 @@ def loop():
 
             if turns_taken == 0:
                 # go half distance
-                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 0.75:
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 0.5:
                     twist_msg.linear.x = 0.2
                     publisher_vel.publish(twist_msg)
                     #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))
@@ -159,7 +173,7 @@ def loop():
 
             elif turns_taken == 1:
                 # go full distance
-                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 6:
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 6.5:
                     twist_msg.linear.x = 0.2
                     publisher_vel.publish(twist_msg)
                     #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))
@@ -183,7 +197,7 @@ def loop():
                     y0 = None
             elif turns_taken == 3:
                 # go full distance
-                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 6:
+                if np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2) < 6.5:
                     twist_msg.linear.x = 0.2
                     publisher_vel.publish(twist_msg)
                     #print(np.sqrt((pose_x - x0)**2 + (pose_y - y0)**2))

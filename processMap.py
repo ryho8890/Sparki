@@ -6,6 +6,8 @@ from std_msgs.msg import *
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import OccupancyGrid, MapMetaData
 
+import cv2
+
 # CONSTANTS
 CYCLE_TIME = 0.1
 # Ros players
@@ -15,45 +17,71 @@ publisher_waypoints = None
 
 # others
 map = None
-waypoints = []
-nodes = []
 explore_complete = None
+complete = None
 
-def foundInWaypoints(waypoints, point):
-    for i in waypoints:
-        if i == point:
-            return 1
-    return 0
+def getWaypoints():
+    global map, publisher_waypoints
 
-def getWaypoints(height, width):
-    global map
-    for y in range(height):
-        for x in range(width):
-            if map[y][x] == 1:
-                nodes.append([x, y])
-    for i in nodes:
-        x = i[0]
-        y = i[1]
-        #left side spots
-        if map[y][130] == 1: #if a line detected
-            count = 0
-            row = y+1
-            while map[row][130] == 0: #count spaces until next line detected
-                count = count + 1
-                row = row + 1
-            if count != 0 and foundInWaypoints(waypoints, [142, y + count/2]) == 0:
-                waypoints.append([142, y + count/2]) #add the midpoint between the two lines
-        #same thing on right side
-        if map[y][200] == 1:
-            count = 0
-            row = y+1
-            while map[row][200] == 0:
-                count = count + 1
-                row = row + 1
-            if count != 0 and foundInWaypoints(waypoints, [188, y + count/2]) == 0:
-                waypoints.append([188, y + count/2])
-    #print(waypoints)
-    pass
+    parkingSpotTemplate = np.array([
+    [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ])
+
+    height, width = map.shape
+
+    th, tw = parkingSpotTemplate.shape
+
+    wps = []
+
+    line_found = None
+    for r in range(height):
+        for c in range(width):
+            hr = r + th
+            hc = c + tw
+
+            if hr > height or hc > width:
+                continue
+
+            window = map[r:hr, c:hc]
+
+            score = max(np.sum(window == parkingSpotTemplate) / float(tw * th),
+                        np.sum(window == np.rot90(parkingSpotTemplate, 2)) / float(tw * th))
+
+            if score > 0.82:
+                wp_x = int(c + (1.5 * tw))
+                wp_y = int(r + (th / 2.0))
+                wps.append([wp_y, wp_x])
+
+
+    print('publishing...')
+    msg = Int32MultiArray()
+    msg.data = list(np.int32(wps).flatten())
+    publisher_waypoints.publish(msg)
+    print('shutting down.')
+
+    return
+
 
 def exploreCallBack(data):
     global explore_complete
@@ -63,10 +91,15 @@ def exploreCallBack(data):
         explore_complete = data
 
 def mapCallBack(data):
-    global explore_complete, map
+    global explore_complete, map, complete
     # do nothing until done exploring
-    # if explore_complete is None or not explore_complete:
+    #if explore_complete is None or not explore_complete:
     #     return
+
+    # do nothing if already done it
+    if complete is not None and complete:
+        return
+
     map_raw = np.array(data.data)
 
     width = int(data.info.width)
@@ -88,7 +121,9 @@ def mapCallBack(data):
 
             map[r][c] = value
 
-    getWaypoints(height, width)
+    map = np.rot90(map, k=2)
+
+    complete = True
 
 def init():
     global subscriber_map, subscriber_explore
@@ -96,29 +131,21 @@ def init():
     global explore_complete
     subscriber_explore = rospy.Subscriber('/explore/complete', Bool, exploreCallBack)
     subscriber_map = rospy.Subscriber('/map', OccupancyGrid, mapCallBack)
-    publisher_waypoints = rospy.Publisher('/parkingbot/waypoints', Float32MultiArray, queue_size=5)
+    publisher_waypoints = rospy.Publisher('/parkingbot/waypoints', Int32MultiArray, queue_size=5)
 
     explore_complete = False
 
     rospy.init_node('waypoints')
 
 def loop():
-    global CYCLE_TIME
+    global CYCLE_TIME, complete
 
     init()
     while not rospy.is_shutdown():
         start_time = time.time()
-        if waypoints != None:
-            for i in waypoints:
-                point = Float32MultiArray()
-                d = MultiArrayDimension()
-                d.label = "x"
-                d.size = 1
-                d.stride = 1
-                point.layout.dim.append(d)
-
-                point.layout.data_offset = 1
-                point.data = [i[0], i[1]]
+        if complete:
+            getWaypoints()
+            return
         rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
 
 if __name__ == "__main__":
