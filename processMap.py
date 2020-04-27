@@ -2,9 +2,14 @@ import numpy as np
 import rospy
 import time
 import math
+import cv2
 from std_msgs.msg import Float32MultiArray, Bool
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import OccupancyGrid
+
+# TEMPORARY
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 # CONSTANTS
 CYCLE_TIME = 0.1
@@ -16,14 +21,16 @@ publisher_waypoints = None
 # others
 map = None
 explore_complete = None
+complete = None
 
 def getWaypoints(height, width):
     global map
 
+    midLine = width // 2
+
     for r in range(height):
         for c in range(width):
             pass
-    pass
 
 def exploreCallBack(data):
     global explore_complete
@@ -34,16 +41,20 @@ def exploreCallBack(data):
         explore_complete = data
 
 def mapCallBack(data):
-    global explore_complete, map
+    global complete, map
 
     # do nothing until done exploring
     if explore_complete is None or not explore_complete:
         return
 
+    # do nothing is already done it
+    if complete is not None and complete:
+        return
+
     map_raw = np.array(data.data)
 
-    width = int(data.MapMetaData.width)
-    height = int(data.MapMetaData.height)
+    width = int(data.info.width)
+    height = int(data.info.height)
 
     map = np.zeros((height, width))
 
@@ -52,14 +63,22 @@ def mapCallBack(data):
             flat_i = (r * width) + c
             raw_value = map_raw[flat_i]
 
+            # check if unknown
             if raw_value < 0:
-                value = -1
+                value = 0
+            # check if prob of obstacle less than 50%
             elif raw_value < 50:
                 value = 0
+            # otherwise, confident of obstacle
             else:
                 value = 1
 
             map[r][c] = value
+
+
+    map = np.rot90(map, k=2)
+
+    complete = True
 
     getWaypoints(height, width)
 
@@ -85,3 +104,6 @@ def loop():
         start_time = time.time()
         pass
         rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
+
+if __name__ == "__main__":
+    loop()

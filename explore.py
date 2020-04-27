@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 
 # CONSTANTS
-CYCLE_TIME = 0.1
+CYCLE_TIME = 0.05
 TURN_LEFT = 0
 GO_STRAIGHT = 1
 TURN_RIGHT = 2
