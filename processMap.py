@@ -93,8 +93,8 @@ def exploreCallBack(data):
 def mapCallBack(data):
     global explore_complete, map, complete
     # do nothing until done exploring
-    #if explore_complete is None or not explore_complete:
-    #     return
+    if explore_complete is None or not explore_complete:
+         return
 
     # do nothing if already done it
     if complete is not None and complete:
