@@ -125,7 +125,8 @@ def loop():
                 msg.data = True
                 publisher_atWP.publish(msg)
                 print('Goal Reached')
-                status = -1
+                while status == 3:
+                    rospy.sleep(5)
 
             if not image_captured is None and not image_captured:
                 continue

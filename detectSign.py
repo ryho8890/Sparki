@@ -51,13 +51,16 @@ def imageCallback(data):
         Bridge = CvBridge()
         try:
             print('Capturing an image now..\n')
-            cv_img = bridge.imgmsg_to_cv2(data, "bgr8")
+            #cv_img = Bridge.imgmsg_to_cv2(data, "bgr8")
             msg = Bool()
             msg.data = True
             publisher_captured.publish(msg)
             atWP = None
-            analyzePicture(cv_img, wp)
-        except:
+
+            img = np.array(data.data)
+            analyzePicture(img, wp)
+        except e:
+            raise e
             print('Capture Failed... :(\n')
             pass
     return
