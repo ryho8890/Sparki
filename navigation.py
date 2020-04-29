@@ -24,15 +24,27 @@ status = None
 pose_x = None
 pose_y = None
 middle_estimate = None
+image_captured = None
 
 def init():
-    global publisher_navigate, subscriber_waypoints
+    global publisher_navigate, subscriber_waypoints, subscriber_status
+    global subscriber_pose, subscriber_captured, publisher_atWP
 
     rospy.init_node('navigation')
     publisher_navigate = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=5)
-    subscriber_waypoints = rospy.Subscriber('/parkingbot/waypoints', Int32MultiArray, waypointCallBack)
+    publisher_atWP = rospy.Publisher('/parkingbot/atWP', Bool, queue_size=5)
+    subscriber_waypoints = rospy.Subscriber('/parkingbot/waypoints', Float32MultiArray, waypointCallBack)
     subscriber_status = rospy.Subscriber('/move_base/status', GoalStatusArray, statusCallback)
     subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallback)
+    subscriber_captured = rospy.Subscriber('/parkingbot/captured', Bool, capturedCallback)
+
+def capturedCallback(data):
+    global image_captured
+
+    if data is None:
+        return
+    else:
+        image_captured = data
 
 def poseCallback(data):
     global pose_x, pose_y
@@ -42,10 +54,14 @@ def poseCallback(data):
 
 def waypointCallBack(data):
     global waypoints, middle_estimate
-    # reshape and put in correct resolution
-    waypoints = np.array(data.data).reshape((-1, 2)) * (5 / 100.0)
-    # take mean of x's to guesstimate the middle of the lot
-    middle_estimate = np.mean(waypoints, 0)[1]
+
+    if waypoints is None:
+        # reshape and put in correct resolution
+        waypoints = np.array(data.data).reshape((-1, 2)) # * (5 / 100.0)
+        # take mean of x's to guesstimate the middle of the lot
+        middle_estimate = -0.8 #np.mean(waypoints, 0)[1]
+    else:
+        np.vstack((waypoints, np.array(data.data).reshape((-1, 2))))
 
 def statusCallback(data):
     global status
@@ -60,8 +76,13 @@ def getNextWaypoint():
     dist_dict = {}
 
     count = 0
+
     for wp in waypoints:
-        y,x = wp
+        try:
+            y,x = wp
+        except:
+            wp = [wp]
+            y,x = wp
 
         dist = np.sqrt((pose_x - x)**2 + (pose_y - y)**2)
         dist_dict[dist] = {
@@ -74,17 +95,19 @@ def getNextWaypoint():
     dists = dist_dict.keys()
     minDist = min(dists)
     nwp = dist_dict[minDist]['wp']
-    waypoints.pop(dist_dict[minDist]['i'])
+
+    waypoints = np.delete(waypoints, dist_dict[minDist]['i'], 0)
 
     return nwp
 
 
 def loop():
-    global waypoints, status, middle_estimate
-    global publisher_navigate, subscriber_waypoints
+    global waypoints, status, middle_estimate, image_captured
+    global publisher_navigate, subscriber_waypoints, publisher_atWP
 
 
     init()
+
 
     while not rospy.is_shutdown():
         start_time = time.time()
@@ -96,6 +119,19 @@ def loop():
 
         # new goal needed
         if status is None or status == 3:
+
+            if status == 3:
+                msg = Bool()
+                msg.data = True
+                publisher_atWP.publish(msg)
+                print('Goal Reached')
+                status = -1
+
+            if not image_captured is None and not image_captured:
+                continue
+
+            status = -1
+            image_captured = False
 
             if len(waypoints) > 0:
                 y,x = getNextWaypoint()

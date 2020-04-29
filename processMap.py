@@ -19,9 +19,12 @@ publisher_waypoints = None
 map = None
 explore_complete = None
 complete = None
+origin_x = None
+origin_y = None
+resolution = None
 
 def getWaypoints():
-    global map, publisher_waypoints
+    global map, publisher_waypoints, origin_x, origin_y, resolution
 
     parkingSpotTemplate = np.array([
     [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -69,14 +72,29 @@ def getWaypoints():
                         np.sum(window == np.rot90(parkingSpotTemplate, 2)) / float(tw * th))
 
             if score > 0.82:
-                wp_x = int(c + (1.5 * tw))
-                wp_y = int(r + (th / 2.0))
-                wps.append([wp_y, wp_x])
+                wps.append([r,c])
+
+
+    middle_estimate = np.mean(wps, 0)[1]
+
+    for i in range(len(wps)):
+        y,x = tuple(wps[i])
+
+        if x > middle_estimate:
+            mult = -0.4
+        else:
+            mult = 1.4
+
+        wp_x = ((x + (mult * tw)) * resolution) + origin_x
+        wp_y = ((y - (th / 2.0)) * resolution) + origin_y
+
+        wps[i] = [wp_y, wp_x]
+
 
 
     print('publishing...')
-    msg = Int32MultiArray()
-    msg.data = list(np.int32(wps).flatten())
+    msg = Float32MultiArray()
+    msg.data = list(np.array(wps).flatten())
     publisher_waypoints.publish(msg)
     print('shutting down.')
 
@@ -91,7 +109,7 @@ def exploreCallBack(data):
         explore_complete = data
 
 def mapCallBack(data):
-    global explore_complete, map, complete
+    global explore_complete, map, complete, origin_x, origin_y, resolution
     # do nothing until done exploring
     if explore_complete is None or not explore_complete:
          return
@@ -104,6 +122,13 @@ def mapCallBack(data):
 
     width = int(data.info.width)
     height = int(data.info.height)
+
+    origin = data.info.origin
+    origin_x = origin.position.x
+    origin_y = origin.position.y
+    resolution = data.info.resolution
+
+
 
     map = np.zeros((height, width))
 
@@ -121,7 +146,7 @@ def mapCallBack(data):
 
             map[r][c] = value
 
-    map = np.rot90(map, k=2)
+    #map = np.rot90(map, k=2)
 
     complete = True
 
@@ -131,7 +156,7 @@ def init():
     global explore_complete
     subscriber_explore = rospy.Subscriber('/explore/complete', Bool, exploreCallBack)
     subscriber_map = rospy.Subscriber('/map', OccupancyGrid, mapCallBack)
-    publisher_waypoints = rospy.Publisher('/parkingbot/waypoints', Int32MultiArray, queue_size=5)
+    publisher_waypoints = rospy.Publisher('/parkingbot/waypoints', Float32MultiArray, queue_size=5)
 
     explore_complete = False
 

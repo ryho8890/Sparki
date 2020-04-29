@@ -3,7 +3,7 @@ import rospy
 import cv2
 import time
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import *
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
 
@@ -11,66 +11,56 @@ from cv_bridge import CvBridge
 CYCLE_TIME = 2 # a bit slower to allow turtlebot to actually move and not overwhelm system
 
 # GLOBALS
-waypoints = None
-subscriber_waypoints = None
+subscriber_atWP = None
 subscriber_image = None
-subscriber_pose = None
 publisher_sign_detection = None
-pose_x = None
-pose_y = None
+publisher_captured = None
+
+atWP = None
 
 
 '''
 Init function to start our detectSign node and instantiate publishers and subscribers
 '''
 def init():
-    global waypoints, subscriber_waypoints, subscriber_image, publisher_sign_detection
+    global waypoints
+    global subscriber_atWP, subscriber_image, publisher_sign_detection, publisher_captured
 
     subscriber_image = rospy.Subscriber('/camera/rgb/image_raw', Image, imageCallback)
-    subscriber_waypoints = rospy.Subscriber('/parkingBot/waypoints', Float32MultiArray, waypointCallback)
-    subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallback)
+    subscriber_atW = rospy.Subscriber('/parkingbot/atWP', Bool, atWPCallback)
+    publisher_captured = rospy.Publisher('parkingbot/captured', Bool, queue_size=5)
 
     rospy.init_node('signCV')
 
 
+def atWPCallback(data):
+    global atWP
+
+    if data is None:
+        return
+    else:
+        print('I know Im at a waypoint!')
+        atWP = data
+
+
 def imageCallback(data):
-    wp = nearWaypoint()
-    if not wp is None:
+    global atWP, publisher_captured
+    #wp = nearWaypoint()(
+    print('waiting... {}\n'.format(atWP))
+    if not atWP is None and atWP:
         Bridge = CvBridge()
         try:
+            print('Capturing an image now..\n')
             cv_img = bridge.imgmsg_to_cv2(data, "bgr8")
+            msg = Bool()
+            msg.data = True
+            publisher_captured.publish(msg)
+            atWP = None
             analyzePicture(cv_img, wp)
         except:
+            print('Capture Failed... :(\n')
             pass
     return
-
-def waypointCallback(data):
-    waypoints = list(data.copy())
-
-def poseCallback(data):
-    global pose_x, pose_y
-
-    pose_x = data.pose.pose.position.x
-    pose_y = data.pose.pose.position.y
-
-def nearWaypoint():
-    global pose_x, pose_y, waypoints
-
-    if pose_x is None or pose_y is None:
-        return None
-
-    if waypoints is None:
-        return None
-
-    THRESHOLD = 5 # TO BE DETERMINED
-
-    for i in range(len(waypoints)):
-        wp_y, wp_x = waypoints[i]
-        if np.sqrt((wp_y - pose_y)^2 + (wp_x - pose_x)^2) <= THRESHOLD:
-            waypoints = waypoints.pop(i)
-            return (wp_y, wp_x)
-
-    return None
 
 
 '''
