@@ -121,21 +121,22 @@ def loop():
         if status is None or status == 3:
 
             if status == 3:
-                msg = Bool()
-                msg.data = True
-                publisher_atWP.publish(msg)
-                print('Goal Reached')
-                while status == 3:
-                    rospy.sleep(5)
+                if image_captured is None:
+                    msg = Bool()
+                    msg.data = True
+                    publisher_atWP.publish(msg)
+                    print('Goal Reached')
+                    image_captured = False
 
             if not image_captured is None and not image_captured:
                 continue
-
-            status = -1
-            image_captured = False
+            elif not image_captured is None and image_captured:
+                image_captured = None
 
             if len(waypoints) > 0:
                 y,x = getNextWaypoint()
+
+                print(x, middle_estimate)
 
                 if x > middle_estimate:
                     t = 0
@@ -162,7 +163,7 @@ def goToGoal(x,y,t):
     msg.pose.position.y = y
     #msg.pose.position.z = 0
 
-    q = convert2Quaternion(np.deg2rad(t), 0.0, 0.0)
+    q = convert2Quaternion(t, 0.0, 0.0)
 
     msg.pose.orientation = Quaternion(*q)
 

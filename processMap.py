@@ -106,6 +106,7 @@ def exploreCallBack(data):
     if data is None:
         return
     else:
+        print('Oh boy, time to process the map')
         explore_complete = data
 
 def mapCallBack(data):

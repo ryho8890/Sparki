@@ -227,6 +227,7 @@ def loop():
             publisher_vel.publish(twist_msg)
             complete_msg = Bool(True)
             publisher_complete.publish(complete_msg)
+            print('Im done exploring!!')
             return
 
         rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
