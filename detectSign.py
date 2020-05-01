@@ -37,7 +37,7 @@ def init():
 
     rospy.init_node('signCV')
 
-    atWP = True
+    #atWP = True
 
 def poseCallback(data):
     global pose_x, pose_y
@@ -58,21 +58,26 @@ def atWPCallback(data):
 def imageCallback(data):
     global atWP, publisher_captured
     #wp = nearWaypoint()(
-    print('waiting... {}\n'.format(atWP))
+    #print('waiting... {}\n'.format(atWP))
     if not atWP is None and atWP:
         Bridge = CvBridge()
         try:
+            atWP = None
             print('Capturing an image now..\n')
-            cv_img = Bridge.imgmsg_to_cv2(data, "bgr8")
+            print(data.height, data.width, data.encoding, data.is_bigendian, data.step)
+            cv_img = Bridge.imgmsg_to_cv2(data.data, desired_encoding='bgr8')
+            print("img")
             msg = Bool()
             msg.data = True
             publisher_captured.publish(msg)
-            atWP = None
+            #atWP = None
 
             img = np.uint8(cv_img)
+            print("analyzing")
             analyzePicture(img)
+            print("captured")
         except:
-            print('Capture Failed... :(\n')
+            #print('Capture Failed... :(\n')
             pass
     return
 

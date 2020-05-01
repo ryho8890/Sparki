@@ -1,5 +1,4 @@
 import rospy
-import argparse
 import time
 import numpy as np
 from std_msgs.msg import *
@@ -15,8 +14,12 @@ publisher_park = None
 subscriber_navigated = None
 subscriber_pose = None
 subscriber_signs = None
+subscriber_waypoints = None
 
 navigation_complete = None
+waypoints = None
+spot_signs = None
+middle_estimate = None
 pose_x = None
 pose_y = None
 
@@ -25,11 +28,19 @@ def init():
 
     rospy.init_node('park')
     publisher_park = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=5)
-    #check that this is right
     subscriber_navigated = rospy.Subscriber('/navigation/complete', Bool, navigationCallBack)
-    #get this
-    subscriber_signs = rospy.Subscriber(signsCallBack)
+    subscriber_signs = rospy.Subscriber('/parkingbot/sign', Float32MultiArray, signsCallBack)
+    subscriber_waypoints = rospy.Subscriber('/parkingbot/waypoints', Float32MultiArray, waypointCallBack)
     subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallBack)
+
+def waypointCallBack(data):
+    global waypoints, middle_estimate
+
+    if waypoints is None:
+        waypoints = np.array(data.data).reshape((-1, 2))
+        middle_estimate = -0.8
+    else:
+        np.vstack((waypoints, np.array(data.data).reshape((-1, 2))))
 
 def poseCallBack(data):
     global pose_x, pose_y
@@ -45,7 +56,12 @@ def navigationCallBack(data):
         navigation_complete = data
 
 def signsCallBack(data):
-    do stuff
+    global spot_signs
+
+    if spot_signs is None:
+        spot_signs = np.array(data.data).reshape((-1, 3))
+    else:
+        np.vstack((spot_signs, np.array(data.data).reshape((-1, 3))))
 
 def loop():
     global publisher_park, subscriber_navigated, subscriber_pose, subscriber_signs
@@ -54,22 +70,69 @@ def loop():
     while not rospy.is_shutdown():
         start_time = time.time()
         if navigation_complete is not None:
-            #findBestSpot: get x, y, theta of the best spot
-            #go to that waypoint
+            print("park starting")
+            x, y, t = findBestSpot()
             goToGoal(x,y,t)
-            #park
+            park()
         rospy.sleep(max(CYCLE_TIME - (start_time - time.time()), 0))
 
 def park():
-    global publisher_park, subscriber_navigated, subscriber_pose, subscriber_signs
-    #turn to face the spot
-    #go in
+    global publisher_park
+
+    msg = PoseStamped()
+
+    msg.header.frame_id = 'map'
+    msg.pose.position.y = pose_y
+
+    if x > middle_estimate:
+        msg.pose.position.x = pose_x + 6
+    else:
+        msg.pose.position.x = pose_x - 6
+
+    rospy.sleep(1)
+    msg.header.stamp = rospy.Time.now()
+    publisher_park.publish(msg)
 
 def findBestSpot():
     global publisher_park, subscriber_navigated, subscriber_pose, subscriber_signs
+    global waypoints, spot_signs, pose_x, pose_y
 
-    #find nearest spot with no signs
-    #return a waypoint of that spot: x, y, theta
+    #there is a waypoint where there is no spot
+    flag = 0
+    time = 0
+    x = 0
+    y = 0
+    for waypoint in waypoints:
+        for spot in spot_signs:
+            if spot[1] == waypoint[0] and spot[0] == waypoint[1]:
+                flag = 0
+                continue
+            else:
+                flag = 1
+        if flag == 1:
+            x = waypoint[1]
+            y = waypoint[0]
+            if x > middle_estimate:
+                t = 0
+            else:
+                t = np.pi
+            return (x, y, t)
+        else:
+            for spot in spot_signs:
+                if spot[2] != -1:
+                    if spot[2] > time:
+                        time = spot[2]
+                        x = spot[1]
+                        y = spot[0]
+            if x > middle_estimate:
+                t = 0
+            else:
+                t = np.pi
+            return (x, y, t)
+    print('No place to park!')
+    return
+
+
 
 def goToGoal(x,y,t):
     global publisher_park

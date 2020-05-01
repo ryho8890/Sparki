@@ -13,6 +13,7 @@ CYCLE_TIME = 0.100
 
 publisher_navigate = None
 publisher_at_waypoint = None
+publisher_complete = None
 subscriber_cv_complete = None
 subscriber_waypoints = None
 subscriber_status = None
@@ -28,11 +29,12 @@ image_captured = None
 
 def init():
     global publisher_navigate, subscriber_waypoints, subscriber_status
-    global subscriber_pose, subscriber_captured, publisher_atWP
+    global subscriber_pose, subscriber_captured, publisher_atWP, publisher_complete
 
     rospy.init_node('navigation')
     publisher_navigate = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=5)
     publisher_atWP = rospy.Publisher('/parkingbot/atWP', Bool, queue_size=5)
+    publisher_complete = rospy.Publisher('/navigation/complete', Bool, queue_size=5)
     subscriber_waypoints = rospy.Subscriber('/parkingbot/waypoints', Float32MultiArray, waypointCallBack)
     subscriber_status = rospy.Subscriber('/move_base/status', GoalStatusArray, statusCallback)
     subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallback)
@@ -103,7 +105,7 @@ def getNextWaypoint():
 
 def loop():
     global waypoints, status, middle_estimate, image_captured
-    global publisher_navigate, subscriber_waypoints, publisher_atWP
+    global publisher_navigate, subscriber_waypoints, publisher_atWP, publisher_complete
 
 
     init()
@@ -126,17 +128,19 @@ def loop():
                     msg.data = True
                     publisher_atWP.publish(msg)
                     print('Goal Reached')
-                    image_captured = False
+                    image_captured = True
 
             if not image_captured is None and not image_captured:
+                print("continuing")
                 continue
             elif not image_captured is None and image_captured:
+                print("none")
                 image_captured = None
-
+            print("out")
             if len(waypoints) > 0:
                 y,x = getNextWaypoint()
 
-                print(x, middle_estimate)
+                print(x, y, middle_estimate)
 
                 if x > middle_estimate:
                     t = 0
@@ -147,6 +151,8 @@ def loop():
 
             else:
                 # maybe publish that its reached the last waypoint or something idk man im tired AF.
+                if len(waypoints) == 0:
+                    publisher_complete.publish(Bool(True))
                 return
 
 
