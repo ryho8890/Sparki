@@ -30,7 +30,7 @@ def init():
     global subscriber_atWP, subscriber_image, publisher_sign_detection, publisher_captured
 
     subscriber_image = rospy.Subscriber('/camera/rgb/image_raw', Image, imageCallback)
-    subscriber_image = rospy.Subscriber('/odom', Odometry, poseCallback)
+    subscriber_pose = rospy.Subscriber('/odom', Odometry, poseCallback)
     subscriber_atW = rospy.Subscriber('/parkingbot/atWP', Bool, atWPCallback)
     publisher_captured = rospy.Publisher('parkingbot/captured', Bool, queue_size=5)
     publisher_sign = rospy.Publisher('/parkingbot/sign', Float32MultiArray, queue_size=5)
@@ -58,7 +58,7 @@ def atWPCallback(data):
 def imageCallback(data):
     global atWP, publisher_captured
     #wp = nearWaypoint()(
-    print('waiting... {}\n'.format(atWP))
+    #print('waiting... {}\n'.format(atWP))
     if not atWP is None and atWP:
         Bridge = CvBridge()
         try:
@@ -69,8 +69,7 @@ def imageCallback(data):
             publisher_captured.publish(msg)
             atWP = None
 
-            img = np.uint8(cv_img)
-            analyzePicture(img)
+            analyzePicture(cv_img)
         except:
             print('Capture Failed... :(\n')
             pass
@@ -115,8 +114,8 @@ def analyzePicture(img):
     else:
         #repeat for black filter!
         blackFiltered = cv2.inRange(half_img_hsv,(0,0,0),(5, 5, 5))
-        cv2.imshow('b', blackFiltered)
-        cv2.waitKey(0)
+        #cv2.imshow('b', blackFiltered)
+        #cv2.waitKey(0)
 
         params = cv2.SimpleBlobDetector_Params()
         params.filterByArea = True

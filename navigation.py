@@ -128,14 +128,15 @@ def loop():
                     msg.data = True
                     publisher_atWP.publish(msg)
                     print('Goal Reached')
-                    image_captured = True
+                    image_captured = False
 
             if not image_captured is None and not image_captured:
                 print("continuing")
                 continue
             elif not image_captured is None and image_captured:
-                print("none")
+                print("image captured")
                 image_captured = None
+
             print("out")
             if len(waypoints) > 0:
                 y,x = getNextWaypoint()

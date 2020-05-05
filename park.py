@@ -27,6 +27,7 @@ def init():
     global publisher_park, subscriber_navigated, subscriber_pose
 
     rospy.init_node('park')
+
     publisher_park = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=5)
     subscriber_navigated = rospy.Subscriber('/navigation/complete', Bool, navigationCallBack)
     subscriber_signs = rospy.Subscriber('/parkingbot/sign', Float32MultiArray, signsCallBack)
@@ -50,6 +51,7 @@ def poseCallBack(data):
 
 def navigationCallBack(data):
     global navigation_complete
+
     if data is None:
         return
     else:
@@ -65,7 +67,7 @@ def signsCallBack(data):
 
 def loop():
     global publisher_park, subscriber_navigated, subscriber_pose, subscriber_signs
-    global pose_x, pose_y
+    global pose_x, pose_y, CYCLE_TIME
     init()
     while not rospy.is_shutdown():
         start_time = time.time()
@@ -85,9 +87,9 @@ def park():
     msg.pose.position.y = pose_y
 
     if x > middle_estimate:
-        msg.pose.position.x = pose_x + 6
+        msg.pose.position.x = pose_x + 0.5
     else:
-        msg.pose.position.x = pose_x - 6
+        msg.pose.position.x = pose_x - 0.5
 
     rospy.sleep(1)
     msg.header.stamp = rospy.Time.now()
